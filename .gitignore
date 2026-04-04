@@ -1,0 +1,9 @@
+deflated_model/
+*.pt
+results/raw/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+env/
+.env

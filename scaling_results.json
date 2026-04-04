@@ -1,0 +1,962 @@
+[
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 4.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 8.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 4.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 4.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 8.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 4.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 4.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 8.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 8.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Llama-3.1-8B",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4617402389992062,
+        "sigma1": 1.1815855503082275,
+        "sigma_mp": 0.8083416730165482
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4883802833625712,
+        "sigma1": 6.328065395355225,
+        "sigma_mp": 4.251645541191102
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.810846386980096,
+        "sigma1": 11.835278511047363,
+        "sigma_mp": 6.535771667957306
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Mistral-7B",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.5841948744898624,
+        "sigma1": 26.24517822265625,
+        "sigma_mp": 16.56688747406006
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 10.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 7,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.3224820276821068,
+        "sigma1": 2.663635492324829,
+        "sigma_mp": 2.0141184806823733
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 10.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 14,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.002032613794042,
+        "sigma1": 12.583457946777344,
+        "sigma_mp": 12.55793251991272
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 10.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 21,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.7587830635983082,
+        "sigma1": 91.8554458618164,
+        "sigma_mp": 52.22670593261719
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 10.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Qwen2.5-7B",
+        "layer": 26,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 2.8257616604219424,
+        "sigma1": 297.7830505371094,
+        "sigma_mp": 105.3815170288086
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 6.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 8,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.694420015848608,
+        "sigma1": 1.9184675216674805,
+        "sigma_mp": 1.1322266638278962
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 6.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 16,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4773795516694246,
+        "sigma1": 28.54831314086914,
+        "sigma_mp": 19.323614645004273
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 6.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 24,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.588479614093387,
+        "sigma1": 104.31261444091797,
+        "sigma_mp": 65.66821098327637
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "sycophancy",
+        "error_rate": 6.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "sycophancy",
+        "error_rate": 0.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": -1.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": 0.0,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    },
+    {
+        "model": "Phi-3.5-Mini",
+        "layer": 30,
+        "alpha": 0.5,
+        "benchmark": "gsm8k",
+        "error_rate": 0.0,
+        "snr": 1.4624305022576782,
+        "sigma1": 192.43429565429688,
+        "sigma_mp": 131.58525848388672
+    }
+]

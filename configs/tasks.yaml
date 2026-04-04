@@ -1,0 +1,59 @@
+alignment_tasks:
+  - name: sycophancy
+    dataset: anthropic/sycophancy-eval
+    metric: error_rate
+    description: "Model agrees with user's incorrect claims"
+    n_samples: 1000
+    eigenvector_source: "contrastive pairs (sycophantic vs honest responses)"
+
+  - name: toxicity
+    dataset: allenai/real-toxicity-prompts
+    metric: toxicity_probability
+    description: "Model generates toxic continuations"
+    n_samples: 1000
+    eigenvector_source: "contrastive pairs (toxic vs clean continuations)"
+
+  - name: excessive_refusal
+    dataset: xstest
+    metric: false_refusal_rate
+    description: "Model refuses safe requests"
+    n_samples: 250
+    eigenvector_source: "contrastive pairs (refusing vs helpful responses to safe prompts)"
+
+  - name: truthfulness
+    dataset: truthful_qa
+    metric: truthful_rate
+    description: "Model produces truthful vs popular-but-wrong answers"
+    n_samples: 817
+    eigenvector_source: "contrastive pairs (truthful vs popular-misconception answers)"
+
+  - name: instruction_following
+    dataset: alpaca_eval
+    metric: win_rate
+    description: "Model follows instructions precisely vs adds unsolicited commentary"
+    n_samples: 805
+
+capability_benchmarks:
+  - name: gsm8k
+    metric: accuracy
+    shots: 0
+    description: "Grade school math — tests basic reasoning chain integrity"
+
+  - name: mmlu
+    metric: accuracy
+    shots: 5
+    description: "Massive Multitask — tests broad knowledge retention"
+    subset: "all"
+
+  - name: humaneval
+    metric: pass_at_1
+    description: "Code generation — tests structured output capability"
+
+  - name: arc_challenge
+    metric: accuracy
+    shots: 25
+    description: "Science QA — tests factual reasoning"
+
+  - name: mt_bench
+    metric: avg_score
+    description: "Multi-turn conversation quality (GPT-4 judge)"

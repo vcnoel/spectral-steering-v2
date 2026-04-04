@@ -1,0 +1,24 @@
+name: steering
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=12.1
+  - scipy
+  - matplotlib
+  - pip:
+    - transformers
+    - accelerate
+    - statsmodels
+    - tqdm
+    - spectral-trust
+    # vLLM is commented out by default for Windows compatibility,
+    # but you can uncomment it if running under WSL or if native wheels are available.
+    # - vllm

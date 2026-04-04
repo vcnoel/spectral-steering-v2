@@ -1,0 +1,55 @@
+methods:
+  # === OUR METHODS ===
+  - name: spectral_deflation
+    type: static_weight_edit
+    inference_cost: 0
+    training_data: "contrastive pairs only (for eigenvector extraction)"
+    description: "Rank-1 subtraction of behavior eigenvector from mlp.down_proj"
+    params:
+      - alpha: [0.5, 1.0, 1.5, 2.0, 3.0]
+
+  - name: spectral_diffusion
+    type: dynamic_inference
+    inference_cost: "O(1) per token"
+    description: "Causal heat kernel smoothing (I - τL) applied during generation"
+    params:
+      - tau: [-0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.5]
+
+  # === INFERENCE-TIME BASELINES ===
+  - name: repe
+    type: inference_addition
+    reference: "Zou et al., 2023"
+    inference_cost: "O(L) additions per forward pass"
+    training_data: "contrastive pairs"
+    description: "Add/subtract reading vector at every layer during inference"
+
+  - name: actadd
+    type: inference_addition
+    reference: "Turner et al., 2023"
+    inference_cost: "O(1) addition per forward pass"
+    training_data: "contrastive pairs"
+    description: "Add steering vector at single layer during inference"
+
+  # === TRAINING-TIME BASELINES ===
+  - name: dpo
+    type: fine_tuning
+    reference: "Rafailov et al., 2023"
+    inference_cost: 0
+    training_data: "preference pairs (requires more data)"
+    description: "Direct Preference Optimization — the standard RLHF alternative"
+
+  - name: abliteration
+    type: static_weight_edit
+    reference: "Arditi et al., 2024"
+    inference_cost: 0
+    training_data: "contrastive pairs"
+    description: "Remove refusal direction from residual stream weights"
+
+  # === CONTROL ===
+  - name: base
+    type: none
+    description: "Unmodified model"
+
+  - name: random_deflation
+    type: static_weight_edit
+    description: "Subtract random rank-1 direction (ablation control)"

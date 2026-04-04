@@ -1,0 +1,37 @@
+models:
+  - name: llama-3.1-8b
+    hf_path: meta-llama/Meta-Llama-3.1-8B-Instruct
+    arch: dense_global
+    n_layers: 32
+    hidden_dim: 4096
+    attention: grouped_query
+
+  - name: llama-3.1-70b
+    hf_path: meta-llama/Llama-3.1-70B-Instruct
+    arch: dense_global
+    n_layers: 80
+    hidden_dim: 8192
+    attention: grouped_query
+    note: "Scale test — does spectral deflation work at 70B?"
+
+  - name: mistral-7b-v0.3
+    hf_path: mistralai/Mistral-7B-Instruct-v0.3
+    arch: sliding_window
+    n_layers: 32
+    hidden_dim: 4096
+    attention: sliding_window
+    note: "Critical — sliding window attention changes graph topology"
+
+  - name: phi-3.5-mini
+    hf_path: microsoft/Phi-3.5-mini-instruct
+    arch: dense_global
+    n_layers: 32
+    hidden_dim: 3072
+    attention: dense
+
+  - name: qwen-2.5-7b
+    hf_path: Qwen/Qwen2.5-7B-Instruct
+    arch: dense_global
+    n_layers: 28
+    hidden_dim: 3584
+    attention: grouped_query
