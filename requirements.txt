@@ -1,0 +1,12 @@
+torch
+transformers
+bitsandbytes
+accelerate
+datasets
+pandas
+matplotlib
+pyyaml
+scipy
+tqdm
+fsspec
+huggingface_hub
