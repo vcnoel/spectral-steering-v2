@@ -1,14 +1,14 @@
 # Spectral Steering v2: High-Throughput Alignment Calibration
 
 ## Overview
-Spectral Steering v2 is a framework for high-precision, zero-retraining alignment calibration of Large Language Models (LLMs). By performing rank-1 spectral deflation of behavioral eigenvectors—identified through contrastive activation pairs—the system can modulate specific behavioral traits (e.g., Sycophancy, Refusal, Toxicity) without degrading the model's fundamental reasoning capabilities.
+Spectral Steering v2 is a computational framework for high-precision, zero-retraining alignment calibration of Large Language Models (LLMs). By performing rank-1 spectral deflation of behavioral eigenvectors—identified through contrastive activation pairs—the system modulates specific behavioral traits, such as sycophancy or toxicity, without degrading the model's fundamental reasoning capabilities.
 
-This repository implements the "75th Percentile Depth Rule," identifying the penultimate reasoning layers (e.g., Layer 24 in 32-layer models) as the optimal intervention point for steering internal truth representations.
+This repository implements the "75th Percentile Depth Rule," which identifies the penultimate reasoning layers (e.g., Layer 24 in 32-layer models) as the optimal intervention point for steering internal truth representations.
 
 ---
 
 ## Key Results
-Empirical validation across four major model families (Llama, Mistral, Qwen, Phi) using 4-bit (NF4) quantized inference:
+Empirical validation across five major model families (Llama, Mistral, Qwen, Phi, Gemma) using 4-bit (NF4) quantized inference:
 
 | Model Family | Param Scale | Baseline Error | Best Alpha | Steering Error | Recovery Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -16,9 +16,10 @@ Empirical validation across four major model families (Llama, Mistral, Qwen, Phi
 | **Qwen-2.5** | 7B | 10.0% | 0.5 / -1.0 | **0.0%** | **Perfect** |
 | **Phi-3.5-Mini** | 3.8B | 6.0% | 0.5 / -1.0 | **0.0%** | **Perfect** |
 | **Mistral-7B** | 7B | 0.0% | N/A | **0.0%** | **Safe** |
+| **Gemma-4** | 2.5B | 5.0% | 0.3 | **0.0%** | **Perfect** |
 
-- **Zero-Tax Capability**: GSM8K accuracy remained at the baseline floor across all successful steering trajectories, proving that spectral steering preserves the model's reasoning logic.
-- **Optimal Depth**: Interventions at 75% depth (Layer 24 for 32-layer models) consistently yielded the highest alignment gains across diverse architectures.
+- **Zero-Tax Capability**: GSM8K accuracy remains at the baseline floor across all successful steering trajectories, demonstrating that spectral steering preserves model reasoning logic.
+- **Optimal Depth**: Interventions at 75% depth consistently yield the highest alignment gains across diverse architectures.
 
 ---
 
@@ -42,7 +43,7 @@ python scripts/run_phase1.py extract --model meta-llama/Llama-3.1-8B-Instruct --
 ```
 
 ### 2. Spectral Deflation (Surgery)
-Modify the model weights using the rank-1 deflation/sharpening update. The script handles [out, in] dimension mismatches for architecture-specific MLP blocks (e.g., Llama's `down_proj`).
+Modify the model weights using the rank-1 deflation/sharpening update. The script handles [out, in] dimension mismatches for architecture-specific MLP blocks.
 ```bash
 python scripts/run_phase1.py deflate --layer 24 --alpha 0.5 --model meta-llama/Llama-3.1-8B-Instruct --load_bit4
 ```
@@ -56,9 +57,9 @@ python scripts/run_phase1.py eval --benchmark sycophancy --model_path ./deflated
 ---
 
 ## Theoretical Framework
-The method utilizes the Marchenko-Pastur distribution to identify signal-bearing eigenvectors.
-- **Sharpening ($\alpha < 0$)**: Amplifies the principal component to force behavioral transitions in rigid, low-parameter models.
-- **Smoothing ($\alpha > 0$)**: Deflates the behavioral noise in higher-parameter models to recover the alignment floor of more compact, well-regulated models.
+The methodology utilizes the Marchenko-Pastur distribution to identify signal-bearing eigenvectors.
+- **Sharpening (alpha < 0)**: Amplifies the principal component to force behavioral transitions in rigid, low-parameter models.
+- **Smoothing (alpha > 0)**: Deflates behavioral noise in higher-parameter models to recover the alignment floor.
 
 ---
 
