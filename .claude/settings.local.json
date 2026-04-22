@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('scripts/steer.py'\\).read\\(\\)\\); print\\('Parse OK'\\)\")",
+      "Bash(conda run *)",
+      "Bash(py -3 -c \"import ast; ast.parse\\(open\\('scripts/steer.py'\\).read\\(\\)\\); print\\('Parse OK'\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('scripts/steer.py'\\).read\\(\\)\\); print\\('Parse OK'\\)\")",
+      "PowerShell(& \"C:\\\\Users\\\\valno\\\\miniconda3\\\\envs\\\\gsp\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('C:/Users/valno/Dev/spectral-steering-v2/scripts/steer.py'\\).read\\(\\)\\); print\\('Parse OK'\\)\")"
+    ]
+  }
+}

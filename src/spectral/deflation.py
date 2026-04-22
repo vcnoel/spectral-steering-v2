@@ -1,35 +1,40 @@
 import torch
 
-def apply_rank1_deflation(weight_matrix: torch.Tensor, v_behavior: torch.Tensor, alpha: float) -> torch.Tensor:
+def apply_rank_k_deflation(weight_matrix: torch.Tensor, v_behavior_k: torch.Tensor, alpha: float) -> torch.Tensor:
     """
-    Applies rank-1 spectral deflation to a weight matrix.
+    Applies rank-k spectral deflation to a weight matrix.
     
     Args:
-        weight_matrix: The original weight matrix (out_features, in_features). e.g., mlp.down_proj.
-        v_behavior: The behavior eigenvector (right singular vector of diffs). Shape (out_features,).
+        weight_matrix: [out_features, in_features]
+        v_behavior_k: [out_features, k] - k behavior eigenvectors (singular vectors)
         alpha: Deflation strength.
         
     Returns:
         W_new: The deflated weight matrix.
     """
     W_old_device = weight_matrix.device
-    v = v_behavior.to(W_old_device).squeeze()
+    V = v_behavior_k.to(W_old_device) # [out, k]
     
-    # We want to remove the component of W_old's output that aligns with v.
-    # W_old is [out_features, in_features]. v is [out_features].
-    # Projection of W columns onto v: v @ W_old -> shape [in_features]
-    proj = torch.matmul(v, weight_matrix) 
+    # 1. Project weight rows onto behavior subspace
+    # proj = V^T @ W -> [k, in_features]
+    proj = torch.matmul(V.t(), weight_matrix)
     
-    # W_new = W_old - alpha * (v v^T) W_old = W_old - alpha * outer(v, v^T W_old)
-    rank1_update = alpha * torch.outer(v, proj)
+    # 2. Reconstruct the behavioral component
+    # upgrade = V @ proj -> [out, in_features]
+    rank_k_update = alpha * torch.matmul(V, proj)
     
-    W_new = weight_matrix - rank1_update
+    W_new = weight_matrix - rank_k_update
     return W_new
 
-def deflate_module_weight(module: torch.nn.Module, v_behavior: torch.Tensor, alpha: float, sigma: float = None):
+def deflate_module_weight(module: torch.nn.Module, v_behavior: torch.Tensor, alpha: float):
     """
-    In-place deflation of a PyTorch linear module using a behavior direction.
+    In-place deflation of a PyTorch linear module.
+    v_behavior can be a single vector [out] or a matrix [out, k].
     """
     W_old = module.weight.data
-    W_new = apply_rank1_deflation(W_old, v_behavior, alpha)
+    V = v_behavior
+    if V.dim() == 1:
+        V = V.unsqueeze(1)
+    
+    W_new = apply_rank_k_deflation(W_old, V, alpha)
     module.weight.data = W_new.to(module.weight.dtype)
