@@ -96,7 +96,7 @@
 
 % ============================================================
 \begin{abstract}
-Instruction tuned language models often defer to user opinions even when those opinions are factually wrong, a behavior known as sycophancy. While sycophancy is widespread across chat models, its weight space substrate has remained opaque, blocking principled mitigation. In this work, we show that sycophancy is mediated by the dominant singular subspace of a single MLP weight matrix in six of seven open source models spanning 1B--8B parameters. 
+Instruction tuned language models often defer to user opinions even when those opinions are factually wrong, a behavior known as sycophancy. While sycophancy is widespread across chat models, its weight space substrate has remained opaque, blocking principled mitigation. In this work, we show that sycophancy is mediated by the dominant singular subspace of a single MLP weight matrix in nine of ten open source models spanning 1B--8B parameters.
 
 Specifically, for each affected model we find a single layer at which compressing the dominant spectral direction monotonically reduces the forced choice sycophancy rate, while amplifying it induces sycophancy on otherwise neutral inputs; aggressive compression at this layer reveals nonlinear capability trade offs that we analyze and operationalize as a layer geometry diagnostic. 
 
@@ -279,12 +279,12 @@ permanent modifications free of inference time cost.
 \textbf{Contributions.}
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt,topsep=3pt]
 \item \textbf{Localisation and bidirectional control.}
- In six of seven tested instruction tuned models, sycophancy is
+ In nine of ten tested instruction-tuned models, sycophancy is
  mediated by the dominant singular subspace of one
  \texttt{mlp.down\_proj} layer, with monotone, dose-responsive,
  bidirectional control: compression reduces forced choice sycophancy
- by up to $-72\pp$, amplification increases it by $+18\pp$, across 1B
- to 8B parameters and four architectural families. We note (and
+ by up to $-76\pp$, amplification increases it by $+18\pp$, across 1B
+ to 8B parameters and five architectural families (Llama, Gemma, Phi, Qwen, Mistral). We note (and
  analyze in \Cref{sec:llama3b_entanglement}) that this extreme
  operating point on Llama-3.2-3B incurs severe capability costs;
  milder, capability-preserving interventions on the same layer achieve
@@ -300,9 +300,9 @@ permanent modifications free of inference time cost.
  partitions safe intervention sites from manifold-collapse sites
  (\Cref{sec:mechanistic}). Across models, the spectral profile
  itself stratifies instruction tuned LLMs into two storage classes:
- \emph{localised, low rank} (Llama, Gemma, Phi, a sharp dominant
- mode at one layer) and \emph{distributed, high rank} (Mistral, no
- concentrated mode, near ceiling baseline compliance). Both
+ \emph{localised, low rank} (Llama, Gemma, Phi, Qwen, SmolLM2 — surgery
+ works) and \emph{distributed, high rank} (Mistral — surgery fails,
+ SWA-linked). Gemma-2 represents an intermediate weakly-localised regime. Both
  classifications are recoverable from the SVD profile alone, before
  any behavioural probe (\Cref{sec:mistral}).
 \end{enumerate}
@@ -586,13 +586,12 @@ anchored by absolute layer rather than depth fraction.
 \small
 \setlength{\tabcolsep}{5pt}
 \caption{\textbf{Cross-model results.} Dominant layer, SNR, and
-sycophancy under single-layer spectral steering ($N{\ge}100$,
-5 seeds, 95\% CI unless noted). $^\ddagger$Mistral: surgery fails — inert at mild $\alpha$, collapses at $\alpha{\ge}1.0$; see \Cref{sec:mistral}.
-$^\S$Llama-3B at $\alpha{=}{-}1.5$ shows the headline A/B
-reduction; capability is preserved only at $\alpha{=}{-}0.5$ ($-17\pp$
-sycophancy with $-32\pp$ GSM8K), see \Cref{sec:llama3b_entanglement}.
-$^\natural$Gemma-4: dominant single-layer site from $N{=}30$ sweep ($\alpha{=}{-}1.0$); single-layer aggressive, multi-layer Pareto in \Cref{sec:gemma_pareto}.
-$^\P$Qwen2.5-3B-Instruct: $N{=}50$ sweep only; no capability benchmark yet. L1 has the highest observed SNR of any model tested ($\mathrm{SNR}{=}20.84$).}
+sycophancy under single-layer spectral steering ($N{\ge}100$ unless noted).
+$^\S$Llama-3B at $\alpha{=}{-}1.5$ shows the headline A/B reduction; capability
+is preserved only at $\alpha{=}{-}0.5$ ($-17\pp$ syco, $-32\pp$ GSM8K), see \Cref{sec:llama3b_entanglement}.
+$^\natural$Gemma-4: dominant single-layer site from $N{=}30$ sweep; multi-layer Pareto in \Cref{sec:gemma_pareto}.
+$^\ddagger$Mistral: inert at mild $\alpha$; collapses to $0\%$ at $\alpha{=}{-}1.0$ (manifold collapse, not genuine reduction); see \Cref{sec:mistral}.
+$^\P$$N{=}50$ sweep, $\alpha{=}{-}1.5$; no capability benchmark.}
 \label{tab:summary}
 \begin{tabular}{lccccccc}
 \toprule
@@ -604,10 +603,13 @@ Llama-3.2-1B & 16 & L14 & 2.77 & $-1.5$ & 32\% & 1\% [0,3] & $-31\pp$ \\
 Llama-3.2-3B$^\S$ & 28 & L7 & 4.87 & $-1.5$ & 59\% & 9\% [4,15] & $-50\pp$ \\
 Llama-3.1-8B & 32 & L7 & 5.25 & $-0.5$ & 48\% & 10\% [2,18] & $-38\pp$ \\
 Gemma-4-E2B$^\natural$ & 46 & L13 & 6.53 & $-1.0$ & 70\% & 40\% & $-30\pp$ \\
+Gemma-2-2b & 26 & L8 & 4.57 & $-1.5$ & 90\%$^\P$ & 50\%$^\P$ & $-40\pp$ \\
 Phi-4-mini & 32 & L10 & 4.59 & $-0.2$ & 86\% & 79\% [73,85] & $-7\pp$ \\
-Mistral-7B-v0.3$^\ddagger$ & 32 & L31 & 2.69 & -- & 98\% & -- & not reducible \\
+Mistral-7B-v0.3$^\ddagger$ & 32 & L31 & 2.69 & $-0.5$ & 98\% & 98\% & $0\pp$ \\
 \midrule
 Qwen2.5-3B$^\P$ & 36 & L6 & 6.32 & $-1.5$ & 82\% & 10\% & $-72\pp$ \\
+Qwen2.5-7B$^\P$ & 28 & L16 & 5.15 & $-1.5$ & 90\% & 14\% & $-76\pp$ \\
+SmolLM2-1.7B$^\P$ & 24 & L12 & 4.35 & $-1.5$ & 72\% & 16\% & $-56\pp$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -895,20 +897,28 @@ Per layer SNR provides a dosing guide. In separable models, low SNR sites ($\snr
 \subsection{Storage-class taxonomy: Mistral-7B as the distributed exemplar}
 \label{sec:mistral}
 
-Unlike the Llama, Gemma, Phi, and Qwen models, Mistral-7B-Instruct-v0.3 resists single-layer spectral surgery. Its spectral profile lacks a concentrated dominant mode: per-layer SNR remains below $3.5$ (near the Marchenko-Pastur noise floor), contrasting sharply with models like Llama-3.1-8B ($\snr{=}5.25$) or Qwen2.5-3B ($\snr{=}6.32$ at its L6 operating site). 
+Unlike the Llama, Gemma, Phi, and Qwen models, Mistral-7B-Instruct-v0.3 resists single-layer spectral surgery. Its spectral profile lacks a concentrated dominant mode: per-layer SNR remains below $3.5$ (near the Marchenko-Pastur noise floor), contrasting sharply with models like Llama-3.1-8B ($\snr{=}5.25$) or Qwen2.5-7B ($\snr{=}5.15$ at L16).
 
-Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut.
+The failure mode is binary with no intermediate regime. At $\alpha{=}{-}0.5$ on the highest-SNR layer (L31), sycophancy is completely inert ($98\%{\to}98\%$, zero change). At $\alpha{=}{-}1.0$ on the same layer, the model undergoes full manifold collapse ($98\%{\to}0\%$, $\mathrm{CI}{=}[0,0]$) — not a genuine reduction but an inability to produce coherent A/B outputs. There is no dose that produces targeted behavioural change.
 
-This establishes a taxonomy recoverable entirely from the SVD profile of $W_\mathrm{down}$, serving as a \emph{black-box audit primitive} that predicts intervention success without behavioural testing:
+Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Any dose strong enough to suppress compliance also destroys core representations — the two are inseparable. By contrast, in Llama-3.2-3B L7, $\cos\theta{=}0.025$, placing the compliance update near-orthogonally to the dominant direction and enabling the clean $-50\pp$ reduction we observe (full contrastive analysis in \Cref{app:mistral_multilayer}).
+
+\paragraph{Why Mistral stores compliance differently.}
+A plausible architectural cause is Mistral's \emph{Sliding Window Attention} (SWA), which restricts each attention layer to a local context window of 4096 tokens throughout the entire network. With attention bandwidth constrained to local context, cross-positional information — including compliance signals such as ``is the user asserting something I should agree with?'' — must be routed through the MLP sublayers. The $W_\mathrm{down}$ matrices in Mistral therefore carry more diverse computational roles than in full-attention models. When RLHF trains for compliance, it finds no orthogonal subspace: it is forced to write the compliance update into the existing dominant spectral directions ($\cos\theta{=}0.812$).
+
+This predicts a gradient across attention architectures, which our expanded results support: Mistral (all-SWA, all layers restricted) $\rightarrow$ distributed, surgery fails; Gemma-2 (alternating SWA and global attention) $\rightarrow$ weakly localised, $-40\pp$ best single-layer; full-attention models (Llama, Qwen, SmolLM2) $\rightarrow$ strongly localised, $-50$ to $-76\pp$. The ΔW fingerprint ($\cos(\Delta W_{\mathbf{u}_1}, W_{\mathbf{u}_1})$) provides a fast spectral test of which regime any model falls into, requiring no behavioural evaluation.
+
+This establishes a taxonomy recoverable entirely from the SVD profile of $W_\mathrm{down}$:
 
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item \textbf{Localised, low-rank storage} (Llama, Gemma, Phi, Qwen): A sharp dominant mode at specific layers carries the behavioural programme. Single-layer surgery is class-appropriate and highly effective.
-\item \textbf{Distributed, high-rank storage} (Mistral): Behavioural signals are diffused and entangled with primary spectral directions. Surgical interventions fail.
+\item \textbf{Localised, low-rank} (Llama, Gemma-4, Phi, Qwen, SmolLM2 — full or mostly-full attention): Sharp dominant mode; surgery is highly effective.
+\item \textbf{Weakly localised} (Gemma-2 — alternating SWA/global): Surgery works but with reduced potency ($-40\pp$ vs.\ $-76\pp$).
+\item \textbf{Distributed, high-rank} (Mistral — all-SWA): Compliance co-located with dominant spectral directions; inert at mild dose, collapse at strong dose.
 \end{itemize}
 
 \begin{findingbox}
 \textbf{Finding 5 (Storage-Class Taxonomy).}
-Instruction-tuned LLMs partition into two spectral storage classes, recoverable solely from the per-layer SNR profile of $W_\mathrm{down}$: \emph{localised, low-rank} (sharp dominant mode; surgical interventions work) and \emph{distributed, high-rank} (no concentrated mode; high baseline compliance; single-site surgery fails). This taxonomy predicts intervention viability prior to any behavioural evaluation.
+Instruction-tuned LLMs partition into spectral storage classes recoverable from the per-layer SNR profile and $\Delta W$ fingerprint: \emph{localised} (surgery works, $\cos(\Delta W_{\mathbf{u}_1}, W_{\mathbf{u}_1}) \approx 0$, 9/10 models); \emph{distributed} (surgery fails, $\cos(\Delta W_{\mathbf{u}_1}, W_{\mathbf{u}_1}) \approx 0.81$, Mistral-7B). The SWA architecture correlates with the distributed class, offering a causal hypothesis linking attention mechanism design to the viability of weight-space behavioural surgery.
 \end{findingbox}
 
 Full quantitative results are in \Cref{app:mistral,app:mistral_multilayer}.
