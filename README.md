@@ -1,181 +1,110 @@
-# Spectral Steering v2: Data-Free LLM Alignment via Spectral Weight Sharpening
+# Sycophancy Is Often a Single-Layer Phenomenon
 
-## Overview
+**Spectral Diagnosis and Training-Free Weight Surgery in LLMs**
 
-Spectral Steering v2 is a **zero-training, data-free** framework for alignment calibration of large language models. The core operation is a closed-form rescaling of the singular value spectrum of MLP weight matrices at a specific transformer depth — requiring no prompts, no forward passes during "calibration," and no gradient computation.
-
-The result is a surgical weight modification that reduces sycophantic behavior while leaving reasoning capability statistically unchanged.
+*NeurIPS 2026 submission*
 
 ---
 
-## Method: Spectral Weight Sharpening
+## What this is
 
-Let **W** ∈ ℝ^(d_out × d_in) be the `mlp.down_proj` weight matrix at transformer layer ℓ, with thin SVD:
+Instruction-tuned LLMs frequently agree with users even when users are factually wrong — a behaviour called sycophancy. We show that in six of seven tested models, this behaviour is **mediated by the dominant singular subspace of a single MLP weight matrix**, and can be suppressed or induced by a closed-form rescaling of that subspace. No training, no data, no inference overhead.
 
-```
-W = U Σ Vᵀ,   Σ = diag(σ₁ ≥ σ₂ ≥ … ≥ σᵣ)
-```
+The headline result: on Gemma-4-E2B-it, we achieve a **strict Pareto improvement** — less sycophancy *and* better reasoning simultaneously. On Llama-3.2-3B/8B, sycophancy localises to the same absolute layer (L7) across a 3× parameter gap.
 
-We apply a variance-normalized modulation to the singular value spectrum:
+---
+
+## Method
+
+For the `mlp.down_proj` matrix at layer ℓ with thin SVD W = UΣVᵀ, we apply:
 
 ```
 σᵢ' = σᵢ · (1 + α · (σᵢ − μ_σ) / s_σ)
-
 W' = U Σ' Vᵀ
 ```
 
-where μ_σ and s_σ are the mean and standard deviation of the singular values, and **α** is the sharpening coefficient.
+α < 0 compresses the dominant spectral directions (→ reduces sycophancy).  
+α > 0 amplifies them (→ induces sycophancy on neutral inputs).
 
-| α > 0 (sharpening) | Dominant singular directions amplified; spectrum more peaked |
-| α < 0 (smoothing)  | Spectrum compressed toward uniform; dominant directions reduced |
-
-**No data is read. No forward pass is executed. No gradient is computed.** The transformation requires only the existing model weights and a single scalar hyperparameter.
+The target layer is selected by the per-layer spectral SNR = σ₁(ℓ) / σ̃(ℓ), computable in seconds from weights alone using a Lanczos estimator.
 
 ---
 
-## Layer Selection: The 75th Percentile Depth Rule
+## Key findings
 
-We target the `mlp.down_proj` at layer **ℓ* = ⌊0.75 · L⌋**, where L is the total number of transformer blocks.
-
-This heuristic is validated by the signal-to-noise ratio:
-
-```
-SNR_ℓ = σ₁(ℓ) / median(σ(ℓ))
-```
-
-SNR peaks near the 75th percentile layer across all tested architectures, indicating that the dominant weight directions at this depth carry the strongest spectral signal. The Marchenko-Pastur distribution provides an independent noise floor: layers where `σ₁² / n > λ_max = (1 + √γ)²` are confirmed structural signal, not noise.
-
----
-
-## Key Results
-
-Empirical validation across five model families using 4-bit (NF4) quantized inference:
-
-| Model Family    | Params | Baseline Syco. Error | Best α | Steered Error | GSM8K (baseline) | GSM8K (steered) |
-|:----------------|:------:|:--------------------:|:------:|:-------------:|:----------------:|:---------------:|
-| **Llama-3.1-8B**  | 8B   | 8.0%                | +0.5   | **0.0%**      | 100.0%           | 100.0%          |
-| **Qwen-2.5-7B**   | 7B   | 10.0%               | +0.5   | **0.0%**      | 100.0%           | 100.0%          |
-| **Phi-3.5-Mini**  | 3.8B | 6.0%                | +0.5   | **0.0%**      | 100.0%           | 100.0%          |
-| **Gemma-4-E2B**   | 2.5B | 5.0%                | +0.3   | **0.0%**      | 100.0%           | 100.0%          |
-| **Mistral-7B**†   | 7B   | 0.0%                | N/A    | **0.0%**      | 100.0%           | 100.0%          |
-
-† Mistral-7B-Instruct-v0.3 exhibits near-zero sycophancy on this benchmark at baseline, consistent with its aggressive instruction tuning. Retained as a robustness control.
-
-**Zero-Tax Capability:** GSM8K accuracy is statistically indistinguishable from baseline across all successful steering trajectories. Spectral sharpening modifies the condition number of weight matrices without disrupting the computational structure used for multi-step reasoning.
+| Finding | Result |
+|---------|--------|
+| Cross-scale localisation | Llama-3B and 8B both peak at **L7** (same absolute layer, different depth) |
+| Strict Pareto | Gemma-4-E2B-it: −6.1% sycophancy **and** +8.8% GSM8K simultaneously |
+| Storage taxonomy | Models split into *localised* (surgery works) vs *distributed* (Mistral-7B) |
+| SNR dosing guide | Safe regime: \|α\| ≪ 1/SNR_ℓ — predicts which layers collapse at what dose |
+| ΔW fingerprint | Mistral L31: cos(ΔW_u1, W_u1) = 0.812 — RLHF wrote compliance into the dominant direction |
+| Independent circuits | RepE and spectral surgery target orthogonal directions (cos = 0.030) |
 
 ---
 
-## Why This Works (Hypothesis)
+## Models tested
 
-The dominant singular directions of the MLP down-projection at the 75th percentile depth encode the model's highest-variance computational directions — the "backbone" of its learned representations. Sharpening the spectrum amplifies these backbone directions relative to lower-variance, noisier components. We hypothesize that sycophantic response generation is a lower-variance behavior encoded in weak singular directions, and amplifying the dominant directions suppresses it by shifting the implicit feature weighting during inference.
+| Model | Family | Storage class | Dominant layer | SNR | Δ Sycophancy |
+|-------|--------|---------------|----------------|-----|--------------|
+| Llama-3.2-1B | Llama | Localised | L14 | 2.77 | −31pp |
+| Llama-3.2-3B | Llama | Localised | L7 | 4.87 | −50pp (A/B); −17pp safe |
+| Llama-3.1-8B | Llama | Localised | L7 | 5.25 | −38pp |
+| Gemma-4-E2B-it | Gemma 4 | Localised | L18+L24+L33 | multi | **Strict Pareto** |
+| Phi-4-mini | Phi | Localised (entangled) | L10 | 4.59 | −7pp |
+| Mistral-7B-v0.3 | Mistral | Distributed | — | <3.5 | Not reducible |
+| Qwen2.5-3B | Qwen | Localised | L6 | 6.32 | −72pp |
 
 ---
 
-## CLI Reference
+## Reproduce
 
 ```bash
-# Alpha sweep at the 75th-percentile target layer
-python scripts/steer.py sweep --model meta-llama/Llama-3.1-8B-Instruct --alphas "-0.3,0.1,0.3,0.5"
-
-# 2-phase smart layer + alpha hunt
-python scripts/steer.py hunt --model google/gemma-4-E2B-it
-
-# Single benchmark evaluation (no steering)
-python scripts/steer.py eval --model meta-llama/Llama-3.1-8B-Instruct --benchmark sycophancy --n-samples 200
-
-# Eval with LLM judge (replaces keyword matching)
-python scripts/steer.py eval --model meta-llama/Llama-3.1-8B-Instruct --benchmark sycophancy --judge-backend claude
-
-# Full validation: N=1000 sycophancy, N=250 GSM8K, WikiText PPL
-python scripts/steer.py validate --model google/gemma-4-E2B-it --config "24:0.5"
-
-# Extract behavioral eigenvectors (for rank-k ablations)
-python scripts/steer.py extract --model meta-llama/Llama-3.1-8B-Instruct --n-samples 100
-
-# Rank-k sensitivity ablation
-python scripts/steer.py ablate --model meta-llama/Llama-3.1-8B-Instruct --alpha 0.5
-
-# Run all 5 model families sequentially
-python scripts/steer.py batch
-```
-
-All commands write structured JSON results to `data/results/` and a canonical experiment record to `results/experiments/` via the `ExperimentLogger`. Every metric includes 95% bootstrap confidence intervals.
-
----
-
-## Installation
-
-```bash
-conda create -n gsp python=3.10
+# Install dependencies
+conda env create -f environment.yml
 conda activate gsp
-pip install -r requirements.txt
+
+# Layer sweep (find dominant layer for a model)
+python scripts/steer.py layer-sweep \
+  --model meta-llama/Llama-3.2-3B-Instruct \
+  --alpha -1.5 --n-syco 50
+
+# Validate at a specific layer/alpha
+python scripts/steer.py validate \
+  --model meta-llama/Llama-3.2-3B-Instruct \
+  --config 7:-0.5 --n-syco 100 --n-gsm 50
+
+# Multi-layer hunt (Gemma-style Pareto search)
+python scripts/steer.py combo-hunt \
+  --model google/gemma-2-2b-it \
+  --n-syco 200
 ```
 
-Requires a CUDA-enabled GPU. 4-bit inference via `bitsandbytes` is the default; pass `--load-4bit` flags to control quantization.
+Results are written to `data/results/`.
 
 ---
 
-## Repository Structure
+## Repo structure
 
 ```
 scripts/
-  steer.py              # Main CLI (7 core commands)
-  legacy_sweeps/        # Research-phase one-off sweeps (preserved for reproducibility)
-src/
-  spectral/
-    deflation.py        # Rank-k spectral deflation (used in ablate command)
-    marchenko_pastur.py # MP noise threshold computation
-    eigenvector.py      # Contrastive activation SVD
-  eval/
-    logger.py           # Unified JSON experiment logger
-    statistical.py      # Bootstrap CIs, permutation tests, Cohen's d
-    judge.py            # LLM-as-a-judge sycophancy evaluator (Claude / GPT-4o-mini)
-  baselines/
-    repe.py             # Representation Engineering baseline
-    actadd.py           # Activation Addition baseline
-configs/
-  models.yaml           # Model family definitions
-  tasks.yaml            # Benchmark configurations
-results/
-  experiments/          # Canonical per-run JSON logs (output of ExperimentLogger)
-data/results/           # Raw sweep outputs
-scaling_results.json    # Master trajectory log
-neurips_results.tex     # LaTeX results document
+  steer.py                    — main experiment runner (sweep, validate, hunt, ablate)
+  run_family_expansion.sh     — layer sweeps on new model families
+  run_activation_ablation.py  — causal activation-space evidence
+  run_delta_w_comparison.py   — ΔW analysis (localized vs distributed)
+  run_repe_baseline.py        — RepE controlled comparison
+  run_open_ended_judge.py     — capability collapse diagnostic
+  run_mistral_multilayer.py   — Mistral multi-layer + ΔW sweep
+src/                          — library code
+configs/                      — model/eval configs
+spectral_steering_paper.tex   — paper source
+environment.yml               — conda environment (gsp)
 ```
 
 ---
 
-## Output Format
+## Paper
 
-Every evaluation run produces a JSON record:
+`spectral_steering_paper.tex` — compile with pdflatex or your preferred LaTeX engine.
 
-```json
-{
-  "experiment_id": "sweep_Llama-3.1-8B-Instruct",
-  "timestamp": "2026-04-22T14:30:00+00:00",
-  "model": "meta-llama/Llama-3.1-8B-Instruct",
-  "method": "spectral_sharpening",
-  "config": {"target_layer": 24, "alphas": [0.5], "snr": 1.81},
-  "seed": 42,
-  "eval": {
-    "sycophancy": {"n": 500, "hits": 0, "rate": 0.0, "rate_pct": 0.0,
-                   "ci_95": [0.0, 0.007], "ci_95_pct": [0.0, 0.7], "ci_method": "bootstrap"},
-    "gsm8k":      {"n": 1319, "hits": 1200, "rate": 0.91, "rate_pct": 91.0,
-                   "ci_95": [0.89, 0.93], "ci_95_pct": [89.0, 93.0], "ci_method": "bootstrap"}
-  }
-}
-```
-
----
-
-## Citation
-
-If you use this framework, please cite:
-
-```
-@misc{spectralsteering2026,
-  title  = {Spectral Steering: Data-Free LLM Alignment via Spectral Weight Sharpening},
-  author = {[Author]},
-  year   = {2026}
-}
-```
+The paper is self-contained. Appendices cover: full layer sweep tables, Gemma-4 hyperparameter search, Phi-4 entanglement analysis, Mistral spectral fingerprint, CCA and Procrustes analysis, response examples, method comparison, capability collapse diagnostic (open-ended judge), RepE controlled experiment, Mistral ΔW analysis.

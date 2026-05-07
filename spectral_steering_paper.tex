@@ -401,7 +401,7 @@ guided layer search.
 
 \textbf{Models.} Six instruction tuned models: Llama-3.2-1B-Instruct,
 Llama-3.2-3B-Instruct, Llama-3.1-8B-Instruct~\citep{dubeyLlama3Herd2024};
-Gemma-4-E2B-it~\citep{gemmateamGemma4Technical2025};
+Gemma-4-E2B-it;
 Phi-4-mini-instruct~\citep{abadinPhiSmallLanguage2024}; and
 Mistral-7B-Instruct-v0.3~\citep{jiangMistral7B2023}. The set spans
 three architectural families (Llama/RoPE, Gemma/GemmaAttention,
@@ -443,7 +443,7 @@ from $N{=}250$ to $N{=}500$; all results use 95\% bootstrap CIs over
 \begin{tikzpicture}
 \begin{groupplot}[
  group style={group size=2 by 1, horizontal sep=1.4cm},
- width=0.50\textwidth, height=5.6cm,
+ width=0.50\textwidth, height=5.cm,
  tick align=outside, tick pos=left,
  axis line style={draw=pcgray!60, line width=0.5pt},
  tick style={draw=pcgray!60, line width=0.4pt},
@@ -492,7 +492,7 @@ from $N{=}250$ to $N{=}500$; all results use 95\% bootstrap CIs over
 
 % baseline label
 \node[font=\scriptsize\itshape, color=pcred, anchor=west]
- at (axis cs:18, 63) {baseline 59\%};
+ at (axis cs:15, 63) {baseline 59\%};
 
 % Collapsed layers: small downward markers at the floor with note
 \addplot[only marks, mark=triangle*, mark size=2pt, mark options={
@@ -552,11 +552,7 @@ from $N{=}250$ to $N{=}500$; all results use 95\% bootstrap CIs over
 
 \caption{\textbf{Layer sweep and dose response: Llama-3.2-3B-Instruct.}
 \emph{Left:} Sycophancy rate at all 28 layers under
-$\alpha{=}{-}1.5$ ($N{=}100$ per layer, 5 seeds). The dominant
-sycophancy mediating layer L7 ($\snr{=}4.87$) reduces sycophancy from
-$59\%$ (red dashed baseline) to $9\%$. Layers L0--L1 collapse to no
-valid output (gray triangles); we treat collapse as a categorical
-failure mode rather than a sycophancy reduction (\Cref{sec:mechanistic}).
+$\alpha{=}{-}1.5$ ($N{=}100$ per layer, 5 seeds).
 \emph{Right:} Monotone dose response at L7,
 $59\%\!\to\!43\%\!\to\!27\%\!\to\!9\%$ as $\alpha$ decreases, with
 non overlapping bootstrap 95\% CIs at every step.}
@@ -594,7 +590,7 @@ formalise the distinction in \Cref{sec:mechanistic}.
 \begin{findingbox}
 \textbf{Finding 1 (Cross-Scale Localisation).}
 Llama-3.2-3B and Llama-3.1-8B both localise their dominant sycophancy
-layer at L7---the same \emph{absolute} layer index despite differing
+layer at L7, the same \emph{absolute} layer index despite differing
 in hidden dimension ($3072$ vs.\ $4096$), depth ($28$ vs.\ $32$ layers),
 and parameter count ($3\times$). Their SNR values at L7 are $4.87$ and
 $5.25$, within $8\%$ of each other. Sycophancy representations appear
@@ -624,9 +620,8 @@ $^\P$Qwen2.5-3B-Instruct: layer sweep only ($N{=}50$, $\alpha{=}{-}1.5$); no cap
 Llama-3.2-1B & 16 & L14 & 2.77 & $-1.5$ & 32\% & 1\% [0,3] & $-31\pp$ \\
 Llama-3.2-3B$^\S$ & 28 & L7 & 4.87 & $-1.5$ & 59\% & 9\% [4,15] & $-50\pp$ \\
 Llama-3.1-8B & 32 & L7 & 5.25 & $-0.5$ & 48\% & 10\% [2,18] & $-38\pp$ \\
-Gemma-4-E2B$^\dagger$ & 46 & L33+L18+L24 & , & multi & 39.5\% & 14.8\% [12,17] & $-24.7\pp$ \\
+Gemma-4-E2B$^\dagger$ & 46 & L33+L18+L24 & -- & multi & 39.5\% & 14.8\% [12,17] & $-24.7\pp$ \\
 Phi-4-mini & 32 & L10 & 4.59 & $-0.2$ & 86\% & 79\% [73,85] & $-7\pp$ \\
-Mistral-7B$^\ddagger$ & 32 & , & , & , & 98.5\% [97,100] & , & , \\
 \midrule
 Qwen2.5-3B$^\P$ & 36 & L6 & 6.32 & $-1.5$ & 82\% & 10\% & $-72\pp$ \\
 \bottomrule
@@ -719,7 +714,7 @@ capability relevant singular directions overlap or are separable.
 \centering
 \begin{tikzpicture}
 \begin{axis}[
- width=0.72\textwidth, height=5.8cm,
+ width=0.72\textwidth, height=5cm,
  xlabel={Sycophancy rate (\%)},
  ylabel={GSM8K accuracy (\%)},
  xmin=10, xmax=44,
@@ -793,11 +788,7 @@ capability relevant singular directions overlap or are separable.
 \caption{\textbf{sycophancy reasoning Pareto frontier on Gemma-4-E2B-it.}
 $N{=}1{,}000$ sycophancy items, $N{=}250$ GSM8K items, 5 seeds.
 Shaded green: configurations strictly Pareto dominating the baseline
-(less sycophancy \emph{and} higher GSM8K). Node~39 (green square) lies
-inside this region, a $-6.1\%$ relative reduction in sycophancy
-\emph{and} a $+8.8\%$ relative gain in GSM8K accuracy, both outside the
-baseline 95\% CIs. Aggressive suppression (Node~40) trades $-24.7\pp$
-sycophancy for $-9.2\pp$ GSM8K.}
+(less sycophancy \emph{and} higher GSM8K).}
 \label{fig:pareto}
 \end{figure}
 
@@ -831,7 +822,7 @@ $N{=}1{,}000$ sycophancy / $N{=}250$ GSM8K, 5 seeds. Node~39
 \textbf{Config} & \textbf{Syco.} & $\Delta$\textbf{Syco.}
  & \textbf{GSM8K} & $\Delta$\textbf{GSM} \\
 \midrule
-Baseline & 39.5\% [36,43] & , & 36.4\% [30,43] & , \\
+Baseline & 39.5\% [36,43] & -- & 36.4\% [30,43] & -- \\
 \rowcolor{pcgreenlt!40}
 Node~39 (strict Pareto) & 37.1\% [34,40] & $-6.1\%$ rel. & 39.6\% [33,46] & $+8.8\%$ rel. \\
 Node~28 (mild) & 28.2\% [25,31] & $-28.6\%$ rel. & 34.8\% [29,41] & $-4.4\%$ rel. \\
@@ -845,10 +836,7 @@ suppression must incur capability cost. The strict Pareto improvement
 is possible because the sycophancy relevant spectral directions at
 the targeted layers are not codirectional with the reasoning relevant
 ones: compressing the former modestly \emph{frees} representational
-capacity that is then redirected towards mathematical reasoning. At
-low $|\alpha|$, the perturbation contracts directions that were
-implicitly pushing the residual stream towards compliant outputs,
-leaving the reasoning computation undisturbed.
+capacity that is then redirected towards mathematical reasoning. 
 
 \subsubsection*{Why the Pareto layers are the \emph{lowest}-SNR sites: the SNR as a dosing guide}
 \label{sec:gemma_snr_dial}
@@ -874,7 +862,7 @@ The sweep also reveals sign heterogeneity: at three layers
 ($+3$ to $+10\pp$), confirming that the compliance direction
 at those layers runs opposite to the dominant spectral direction.
 
-Together, these findings establish the per-layer SNR as a \textbf{dosing guide}
+Together, these findings establish the per-layer SNR as a dosing guide
 rather than merely a localization signal.
 Low-SNR layers ($\snr{\approx}3$--$4$) are geometrically soft:
 the spectral mass is spread across many directions, so even a
@@ -928,114 +916,32 @@ dramatically overstate the operational quality of a model in
 nonlinearly entangled regimes (\Cref{app:llama_full}).
 
 \begin{findingbox}
-\textbf{Finding 4 (Geometry-Dependent Tax).}
-Whether spectral steering incurs a capability cost is determined by
-the geometric relationship between sycophancy relevant and capability
-relevant singular directions at the target layer. Three geometries
-are observed:
-(i) \emph{separable} (Gemma-4): the two subspaces are nearly
-orthogonal and strict Pareto improvements are achievable;
-(ii) \emph{linear entanglement} (Phi-4-mini): a near constant
-$1:1$ exchange rate determined by spectral overlap, holding across
-all $|\alpha|$;
-(iii) \emph{nonlinear collapse} (Llama-3.2-3B at L7): the exchange
-rate is moderate at $|\alpha|{=}0.5$ but becomes catastrophic at
-$|\alpha|{\ge}1.0$, suggesting a threshold above which the
-sycophancy reasoning co representation dominates the layer output.
-The geometry, not the suppression strength, determines whether
-capability is preserved.
-The per-layer SNR further serves as a \textbf{dosing guide}:
-within the separable class, the Pareto-optimal layers are precisely
-the lowest-SNR sites ($\snr{\approx}3$--$4$), where flat spectral mass
-enables geometrically clean, low-dose perturbations; high-SNR sites
-($\snr{>}6$) at aggressive $\alpha$ cause collapse even in separable
-models, revealing that separability is a necessary but not sufficient
-condition---the dose must also match the layer's spectral concentration.
+\textbf{Finding 4 (Geometry Dependent Tax).} 
+Spectral steering capability costs depend on sycophancy and capability subspace alignment. We observe three geometries: 
+(i) \emph{separable} (Gemma 4): orthogonal subspaces allow strict Pareto improvements; 
+(ii) \emph{linear entanglement} (Phi 4 mini): a constant $1:1$ tradeoff; and 
+(iii) \emph{nonlinear collapse} (Llama 3.2 3B, L7): tradeoffs turn catastrophic at $|\alpha|{\ge}1.0$. 
+Geometry, not suppression strength, dictates capability preservation. 
+Per layer SNR provides a dosing guide. In separable models, low SNR sites ($\snr{\approx}3$ to $4$) are Pareto optimal for clean perturbations. High SNR sites ($\snr{>}6$) collapse under aggressive $\alpha$. Separability is insufficient; doses must match spectral concentration.
 \end{findingbox}
 
 \subsection{Storage-class taxonomy: Mistral-7B as the distributed exemplar}
 \label{sec:mistral}
 
-The five models discussed so far (the three Llamas, Gemma-4, Phi-4-mini)
-all admit single layer spectral surgery. Mistral-7B-Instruct-v0.3 does
-not, and the manner in which it does not is itself the most informative
-result in this paper.
+Unlike the Llama, Gemma, Phi, and Qwen models, Mistral-7B-Instruct-v0.3 resists single-layer spectral surgery. Its spectral profile lacks a concentrated dominant mode: per-layer SNR remains below $3.5$ (near the Marchenko-Pastur noise floor), contrasting sharply with models like Llama-3.1-8B ($\snr{=}5.25$) or Qwen2.5-3B ($\snr{=}6.32$ at its L6 operating site). 
 
-\textbf{The spectral profile is qualitatively different.} Mistral
-exhibits no concentrated dominant mode at any layer: the per layer SNR
-profile lies below $3.5$ across all 32 layers, with the leading
-singular value sitting near the Marchenko Pastur noise
-floor~\citep{marchenkoPasturDistribution1967,
-martinImplicitSelfregularizationDeep2021}. By contrast, Llama-3.2-3B
-peaks at $\snr{=}4.87$ (L7) and Llama-3.1-8B at $\snr{=}5.25$ (L7).
-This profile is computable in seconds from $W_\mathrm{down}$ alone,
-\emph{before any behavioural probe} (\Cref{app:lanczos}).
+Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut.
 
-\textbf{The behavioural profile matches the spectral one.} Baseline
-sycophancy is $98.5\%$ (CI $[97,100]$), near the response ceiling and
-far above any other tested model. Across all single layer
-configurations (both signs of $\alpha$ at L24), the maximum sycophancy
-reduction is $5.5\pp$, accompanied by severe capability damage when
-$\alpha$ is large enough to register at all ($-55\%$ relative GSM8K at
-$\alpha{=}{+}1.5$). The intervention does not fail because the surgical
-tool is broken; it fails because there is no concentrated mode to cut.
-
-\textbf{The $\Delta W$ fingerprint explains the failure mechanistically.}
-Decomposing $\Delta W {=} W_\mathrm{instruct}{-}W_\mathrm{base}$ for Mistral's
-top-SNR layer (L31) reveals that the dominant direction of $\Delta W$
-is nearly collinear with the dominant direction of $W_\mathrm{instruct}$
-($\cos\theta{=}0.812$). RLHF wrote the compliance update \emph{directly
-into} the layer's primary spectral direction. Cutting that direction
-collapses everything. There is no safe dose (\Cref{app:mistral_multilayer}).
-
-We read this conjunction, flat SNR profile and near universal
-compliance, as a taxonomy-defining finding. The seven tested models
-partition into two storage classes:
+This establishes a taxonomy recoverable entirely from the SVD profile of $W_\mathrm{down}$, serving as a \emph{black-box audit primitive} that predicts intervention success without behavioural testing:
 
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item \textbf{Localised, low-rank storage} (Llama-1B/3B/8B, Gemma-4-E2B,
- Phi-4-mini, Qwen2.5-3B). A sharp dominant singular direction at one or
- a small number of layers carries the sycophancy programme. Single-layer
- spectral surgery is class-appropriate and effective.
-\item \textbf{Distributed, high-rank storage} (Mistral-7B-Instruct-v0.3).
- The sycophancy signal is diffused across many spectral directions
- with no concentrated mode; RLHF has co-located the compliance update
- with the primary spectral direction, so there is no safe surgical site.
+\item \textbf{Localised, low-rank storage} (Llama, Gemma, Phi, Qwen): A sharp dominant mode at specific layers carries the behavioural programme. Single-layer surgery is class-appropriate and highly effective.
+\item \textbf{Distributed, high-rank storage} (Mistral): Behavioural signals are diffused and entangled with primary spectral directions. Surgical interventions fail.
 \end{itemize}
-
-\textbf{Evidence from Qwen2.5-3B-Instruct.}
-A layer sweep of Qwen2.5-3B-Instruct ($N{=}50$, $\alpha{=}{-}1.5$,
-baseline $82\%$ sycophancy) reveals a localised storage pattern
-consistent with the first class.
-The model has an extraordinary spectral peak at L1
-($\mathrm{SNR}{=}20.84$, the highest observed across all seven scanned
-models), and a clean dominant operating site at L6
-($\mathrm{SNR}{=}6.32$; sycophancy $82\%\to10\%$, $\Delta=-72\pp$,
-no manifold collapse).
-Late layers (L28--L34) return to baseline ($82\%$), confirming
-that the effect is localised to the first quarter of the network---the
-same depth fraction as the dominant Llama layers.
-
-The class distinction is recoverable from the SVD profile alone.
-This makes the spectral SNR a \emph{black-box audit primitive}: given
-only weight access, an external auditor can predict whether an
-instruction tuning regime produced concentrated or distributed
-behavioural storage, and therefore which class of post hoc intervention
-will succeed, without behavioural testing or knowledge of the training
-pipeline. Whether the underlying cause is the choice of preference
-optimisation algorithm (PPO vs DPO vs constitutional AI), the breadth
-of the preference dataset, or the duration of fine tuning, is a
-question we leave open and consider in \Cref{sec:discussion}.
 
 \begin{findingbox}
 \textbf{Finding 5 (Storage-Class Taxonomy).}
-Instruction-tuned LLMs partition into two spectral storage classes,
-recoverable from the per layer SNR profile of $W_\mathrm{down}$ alone:
-\emph{localised, low rank} (sharp dominant mode; surgical interventions
-work) and \emph{distributed, high rank} (no concentrated mode;
-near ceiling baseline compliance; surgical interventions are
-class inappropriate). The taxonomy predicts intervention applicability
-without any behavioural evaluation.
+Instruction-tuned LLMs partition into two spectral storage classes, recoverable solely from the per-layer SNR profile of $W_\mathrm{down}$: \emph{localised, low-rank} (sharp dominant mode; surgical interventions work) and \emph{distributed, high-rank} (no concentrated mode; high baseline compliance; single-site surgery fails). This taxonomy predicts intervention viability prior to any behavioural evaluation.
 \end{findingbox}
 
 Full quantitative results are in \Cref{app:mistral,app:mistral_multilayer}.
@@ -1144,13 +1050,11 @@ rank 1 weight edits.
 Most directly related, \citet{fierroWeightArithmetic2026} reduce
 sycophancy via contrastive weight steering, computing a behavior
 direction by subtracting the weight deltas of two narrow fine tunes.
-Our approach is complementary along three orthogonal axes. First, it
+Our approach is complementary. First, it
 is gradient free: no fine tunes, no weight deltas, only an SVD of a
 single matrix. Second, the targeted object is the singular subspace
 of one \texttt{mlp.down\_proj} layer, not a contrastive direction in
-full weight space. Third, the method comes with a predictive layer
-selection diagnostic (per layer SNR) that contrastive weight steering
-does not.
+full weight space.
 
 \textbf{Spectral analysis of LLMs.}
 \citet{martinImplicitSelfregularizationDeep2021} show that well
@@ -1216,8 +1120,8 @@ Mistral's instruction-tuning regime produced distributed storage.
 \begin{thebibliography}{99}
 \small
 
-\bibitem[Abadin et~al.(2024)]{abadinPhiSmallLanguage2024}
-Abadin, M. et~al.
+\bibitem[Abdin et~al.(2024)]{abadinPhiSmallLanguage2024}
+Abdin, M. et~al.
 \newblock Phi-4 technical report.
 \newblock \emph{arXiv:2412.08905}, 2024.
 
@@ -1559,6 +1463,9 @@ Zou, A., Phan, L., Chen, S., Campbell, J., Guo, B., Ren, R., Pan, X.,
 
 \end{thebibliography}
 
+\newpage
+
+
 % ============================================================
 \appendix
 % ============================================================
@@ -1874,7 +1781,7 @@ against a random baseline of $2.1\%$ ($k/d = 64/3072$).
 The RepE direction lies almost entirely \emph{outside} the spectral
 subspace modified by our intervention. The five largest individual
 contributions $(\mathbf{U}_i^\top \hat{\mathbf{d}}_\mathrm{RepE})^2$
-are $0.44\%$, $0.43\%$, $0.42\%$, $0.38\%$, and $0.31\%$---
+are $0.44\%$, $0.43\%$, $0.42\%$, $0.38\%$, and $0.31\%$,
 each negligible, and spread uniformly rather than concentrated on $\mathbf{U}_1$.
 This near-orthogonality ($\rho_{64}$ barely above random) confirms that
 spectral steering and RepE engage \emph{independent circuits}:
@@ -1970,7 +1877,7 @@ steering achieves a \emph{strict Pareto improvement}: both sycophancy and
 reasoning improve simultaneously with zero data and zero inference cost.
 On Llama-3.2-3B, the safe operating point ($\alpha{=}{-}0.5$) achieves
 $-17\pp$ sycophancy at the cost of $-32\pp$ GSM8K, a worse exchange rate
-than DPO---but without any training. The aggressive point ($\alpha{=}{-}1.5$)
+than DPO,but without any training. The aggressive point ($\alpha{=}{-}1.5$)
 maximises A/B sycophancy reduction ($-50\pp$) but at the cost of functional
 capability collapse.
 
@@ -2031,7 +1938,7 @@ instance (\texttt{Llama-3.2-1B-Instruct}) as either honest (error corrected)
 or sycophantic (error not corrected or validated).
 
 \textbf{Judge failure.} The baseline model (no steering) scored $100\%$
-sycophantic by the judge across all 25 items---despite every response
+sycophantic by the judge across all 25 items,despite every response
 explicitly identifying and correcting the embedded error. Inspection reveals
 that the 1B judge cannot parse the distinction between ``pointing out an
 error (non-sycophantic)'' and ``agreeing with the user while noting
@@ -2051,7 +1958,7 @@ Representative examples:
 These responses are not correcting the error, but they are also not the
 coherent user-validation that a sycophantic system would produce. They are
 the output of a model that has lost the ability to engage substantively
-with the prompt---consistent with the GSM8K collapse to $2\%$ and
+with the prompt, consistent with the GSM8K collapse to $2\%$ and
 MMLU collapse to $26\%$ (near random) documented in \Cref{app:llama_full}.
 
 \textbf{Conclusion.} The experiment confirms, via a format entirely
@@ -2140,5 +2047,229 @@ and the primary representational load are co-located in the same spectral
 direction. The mechanism is the extreme case of the SNR-as-dosing-guide
 principle (\Cref{sec:gemma_snr_dial}): when $\cos(\Delta W_{u_1},
 W_{u_1}) \approx 0.81$, there is no safe dose.
+
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The abstract and introduction clearly outline the claims regarding sycophancy localization, the spectral intervention methodology, and the resulting storage-class taxonomy, which are fully supported by the empirical results in the subsequent sections.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the abstract and introduction do not include the claims made in the paper.
+        \item The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A \answerNo{} or \answerNA{} answer to this question will not be perceived well by the reviewers. 
+        \item The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. 
+        \item It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 
+    \end{itemize}
+
+\item {\bf Limitations}
+    \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Limitations are explicitly discussed in Section 7, including the sample size of tested models, reliance on forced-choice benchmarks, and the lack of direct causal ablation via activation changes.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper has no limitation while the answer \answerNo{} means that the paper has limitations, but those are not discussed in the paper. 
+        \item The authors are encouraged to create a separate ``Limitations'' section in their paper.
+        \item The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be.
+        \item The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated.
+        \item The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon.
+        \item The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size.
+        \item If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness.
+        \item While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren't acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.
+    \end{itemize}
+
+\item {\bf Theory assumptions and proofs}
+    \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The paper focuses on empirical observations in mechanistic interpretability and applied weight-space interventions rather than introducing novel theoretical theorems or formal mathematical proofs.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not include theoretical results. 
+        \item All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced.
+        \item All assumptions should be clearly stated or referenced in the statement of any theorems.
+        \item The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. 
+        \item Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.
+        \item Theorems and Lemmas that the proof relies upon should be properly referenced. 
+    \end{itemize}
+
+    \item {\bf Experimental result reproducibility}
+    \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: We detail the closed-form SVD rescaling equation (Eq. 1), the target layers, hyperparameters ($\alpha$), evaluated model weights, and the specific prompt/dataset evaluation setup used throughout the main text and Appendices.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not include experiments.
+        \item If the paper includes experiments, a \answerNo{} answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not.
+        \item If the contribution is a dataset and\slash or model, the authors should describe the steps taken to make their results reproducible or verifiable. 
+        \item Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed.
+        \item While NeurIPS does not require releasing code, the conference does require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example
+        \begin{enumerate}
+            \item If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm.
+            \item If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully.
+            \item If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset).
+            \item We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results.
+        \end{enumerate}
+    \end{itemize}
+
+
+\item {\bf Open access to data and code}
+    \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The research utilizes fully open-weights models (Llama, Gemma, Phi, Mistral) and standard public datasets (GSM8K, MMLU, etc.), allowing broad accessibility and straightforward reproduction of the weight-editing technique. 
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that paper does not include experiments requiring code.
+        \item Please see the NeurIPS code and data submission guidelines (\url{https://neurips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item While we encourage the release of code and data, we understand that this might not be possible, so \answerNo{} is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).
+        \item The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines (\url{https://neurips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+        \item The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why.
+        \item At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable).
+        \item Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.
+    \end{itemize}
+
+
+\item {\bf Experimental setting/details}
+    \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer) necessary to understand the results?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Data sampling procedures ($N$), layer sweeps, and $\alpha$ selection parameters are explicitly documented across Sections 2, 3, 4, and comprehensively detailed in Appendices B, C, and D.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not include experiments.
+        \item The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.
+        \item The full details can be provided either with the code, in appendix, or as supplemental material.
+    \end{itemize}
+
+\item {\bf Experiment statistical significance}
+    \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: We report 95\% bootstrap confidence intervals over 10,000 resamples for all capability and sycophancy benchmark results (detailed in Section 2.4) and note non-overlapping CIs to confirm statistical significance.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not include experiments.
+        \item The authors should answer \answerYes{} if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper.
+        \item The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).
+        \item The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.)
+        \item The assumptions made should be given (e.g., Normally distributed errors).
+        \item It should be clear whether the error bar is the standard deviation or the standard error of the mean.
+        \item It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96\% CI, if the hypothesis of Normality of errors is not verified.
+        \item For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g., negative error rates).
+        \item If error bars are reported in tables or plots, the authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.
+    \end{itemize}
+
+\item {\bf Experiments compute resources}
+    \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Compute costs are explicitly disclosed; for example, Appendix A details the hardware (RTX 5080) and execution time ($<3$ hours total; ~11-28 mins per model) required for the Lanczos-accelerated full layer sweeps.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not include experiments.
+        \item The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.
+        \item The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. 
+        \item The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn't make it into the paper). 
+    \end{itemize}
+    
+\item {\bf Code of ethics}
+    \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The paper aims to mitigate harmful AI behaviors (sycophancy and compliance with factual inaccuracies) and aligns fully with principles of safety and epistemic integrity.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the authors have not reviewed the NeurIPS Code of Ethics.
+        \item If the authors answer \answerNo, they should explain the special circumstances that require a deviation from the Code of Ethics.
+        \item The authors should make sure to preserve anonymity (e.g., if there is a special consideration due to laws or regulations in their jurisdiction).
+    \end{itemize}
+
+
+\item {\bf Broader impacts}
+    \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The Introduction addresses the broader harms of sycophantic behavior (e.g., validating medical misinformation or reinforcing financial errors) and motivates the proposed intervention as a targeted mitigation.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that there is no societal impact of the work performed.
+        \item If the authors answer \answerNA{} or \answerNo, they should explain why their work has no societal impact or why the paper does not address societal impact.
+        \item Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations.
+        \item The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate Deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster.
+        \item The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.
+        \item If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).
+    \end{itemize}
+    
+\item {\bf Safeguards}
+    \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pre-trained language models, image generators, or scraped datasets)?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The paper does not introduce or release new pre-trained models or high-risk datasets; it introduces an interpretability and auditing methodology applicable to existing models.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper poses no such risks.
+        \item Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. 
+        \item Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images.
+        \item We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.
+    \end{itemize}
+
+\item {\bf Licenses for existing assets}
+    \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All evaluated models (Llama, Gemma, Phi, Mistral) and capability datasets (MMLU, GSM8K, ARC, TruthfulQA) are properly cited and used in accordance with their respective open-access licenses.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not use existing assets.
+        \item The authors should cite the original paper that produced the code package or dataset.
+        \item The authors should state which version of the asset is used and, if possible, include a URL.
+        \item The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+        \item For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided.
+        \item If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, \url{paperswithcode.com/datasets} has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset.
+        \item For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided.
+        \item If this information is not available online, the authors are encouraged to reach out to the asset's creators.
+    \end{itemize}
+
+\item {\bf New assets}
+    \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The core contribution of this paper is an algorithmic intervention (spectral steering) and analytical framework rather than the release of a new model or dataset asset.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not release new assets.
+        \item Researchers should communicate the details of the dataset\slash code\slash model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. 
+        \item The paper should discuss whether and how consent was obtained from people whose asset is used.
+        \item At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.
+    \end{itemize}
+
+\item {\bf Crowdsourcing and research with human subjects}
+    \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? 
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The research utilizes existing automated benchmarks and language models acting as automated judges; no crowdsourcing or human subject research was conducted.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. 
+        \item According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 
+    \end{itemize}
+
+\item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
+    \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The paper does not involve human subjects, making IRB approval unnecessary.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. 
+        \item We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. 
+        \item For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review.
+    \end{itemize}
+
+\item {\bf Declaration of LLM usage}
+    \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does \emph{not} impact the core methodology, scientific rigor, or originality of the research, declaration is not required.
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The use of an LLM as a core methodological tool is detailed in Appendix M, where a Llama-3.2-1B-Instruct model is explicitly used as an automated judge for the open-ended generation capability diagnostic.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer \answerNA{} means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
+        \item Please refer to our LLM policy in the NeurIPS handbook for what should or should not be described.
+    \end{itemize}
+
+\end{enumerate}
 
 \end{document}
