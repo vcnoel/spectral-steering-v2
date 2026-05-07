@@ -1,15 +1,7 @@
-"""
-ΔW comparison: Llama vs Mistral.
-
-Computes cos(ΔW_u1, W_instruct_u1) at the dominant sycophancy layer
-for both Llama-3.2-3B (L7) and Mistral-7B (L31).
-
-Hypothesis:
-- Mistral: high cos → RLHF co-located compliance update with primary spectral load → no safe site
-- Llama:   low cos → RLHF stored compliance orthogonally to dominant load → surgery is safe
-
-This directly explains the storage class difference from weight geometry.
-"""
+# dW comparison: Llama vs Mistral.
+# cos(dW_u1, W_instruct_u1) at dominant sycophancy layer.
+# Hypothesis: Mistral=high (RLHF co-located compliance with dominant load),
+#             Llama=low (RLHF stored compliance orthogonally).
 import json, torch, argparse
 from pathlib import Path
 from transformers import AutoModelForCausalLM
@@ -69,8 +61,8 @@ def analyze_pair(cfg):
     delta_snr = sigma1_delta / sigma_median_delta
 
     cos = (U1_delta @ U1_inst).abs().item()
-    print(f"  Layer L{cfg['layer']}: cos(ΔW_u1, W_inst_u1) = {cos:.4f}")
-    print(f"  ΔW SNR = {delta_snr:.3f} (sigma1={sigma1_delta:.4f})")
+    print("  Layer L%d: cos(dW_u1, W_inst_u1) = %.4f" % (cfg['layer'], cos))
+    print("  dW SNR = %.3f (sigma1=%.4f)" % (delta_snr, sigma1_delta))
 
     return {
         "family": cfg["family"],
@@ -78,7 +70,7 @@ def analyze_pair(cfg):
         "base_model": cfg["base"],
         "layer": cfg["layer"],
         "storage_class": cfg["storage_class"],
-        "cos_delta_u1_vs_W_u1": cos,
+        "cos_dW_u1_vs_W_u1": cos,
         "delta_snr": delta_snr,
         "sigma1_delta": sigma1_delta,
     }
@@ -110,11 +102,11 @@ def main():
     print(f"\n=== SUMMARY ===")
     for r in results:
         if "error" not in r:
-            print(f"  {r['family']} L{r['layer']}: cos={r['cos_delta_u1_vs_W_u1']:.4f} "
-                  f"(storage: {r['storage_class']})")
+            print("  %s L%d: cos=%.4f (storage: %s)" % (
+                r['family'], r['layer'], r['cos_dW_u1_vs_W_u1'], r['storage_class']))
     print(f"Saved to {out}")
-    print("\nInterpretation: high cos → RLHF co-located compliance with dominant spectral load.")
-    print("Mistral should be high, Llama should be low — explaining the taxonomy.")
+    print("\nInterpretation: high cos = RLHF co-located compliance with dominant spectral load.")
+    print("Mistral should be high, Llama should be low -- explaining the taxonomy.")
 
 
 if __name__ == "__main__":

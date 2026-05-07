@@ -2048,6 +2048,35 @@ direction. The mechanism is the extreme case of the SNR-as-dosing-guide
 principle (\Cref{sec:gemma_snr_dial}): when $\cos(\Delta W_{u_1},
 W_{u_1}) \approx 0.81$, there is no safe dose.
 
+\textbf{Contrastive control: Llama-3.2-3B L7.}
+To confirm this is a property of Mistral's instruction tuning regime and
+not a general feature of RLHF, we compute the same quantity for
+Llama-3.2-3B at L7 (its dominant sycophancy site). The result:
+$\cos(\Delta W_{u_1}, W_{u_1}) = 0.025$---near-zero alignment. RLHF
+stored the Llama compliance programme in a direction \emph{orthogonal}
+to the dominant representational load, leaving a safe spectral gap for
+surgery. The contrast is stark:
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Model & $\cos(\Delta W_{u_1},\, W_{u_1})$ & Surgery outcome \\
+\midrule
+Mistral-7B L31 & $0.812$ & Immediate collapse \\
+Llama-3.2-3B L7 & $0.025$ & Clean $-50\pp$ reduction \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This pair explains the storage-class taxonomy from first principles:
+the storage class a model lands in is determined by \emph{where RLHF
+writes the compliance update relative to the existing dominant spectral
+direction}. If it writes co-linearly (Mistral), surgery is impossible.
+If it writes orthogonally (Llama), surgery is safe. The $\Delta W$ cosine
+is thus a \emph{predictive} quantity, computable from base and instruct
+weights before any behavioral evaluation.
+
 \section*{NeurIPS Paper Checklist}
 
 \begin{enumerate}
