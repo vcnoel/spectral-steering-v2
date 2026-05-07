@@ -168,11 +168,19 @@ def apply_spectral_steering(model, layer_idx, alpha):
 
 
 def main():
-    gen_model_id = "meta-llama/Llama-3.2-3B-Instruct"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--alpha", type=float, default=-1.5)
+    parser.add_argument("--layer", type=int, default=7)
+    parser.add_argument("--model", default="meta-llama/Llama-3.2-3B-Instruct")
+    args = parser.parse_args()
+
+    gen_model_id = args.model
     judge_model_id = "meta-llama/Llama-3.2-1B-Instruct"
-    layer_idx = 7
-    alpha = -1.5
-    out_path = "data/results/open_ended_judge_3B_L7.json"
+    layer_idx = args.layer
+    alpha = args.alpha
+    tag = gen_model_id.split("/")[-1]
+    out_path = f"data/results/open_ended_judge_{tag}_L{layer_idx}_a{str(alpha).replace('-','m').replace('.','p')}.json"
 
     N = len(ESSAYS)
     print(f"[open-ended judge] N={N} essays, 3B L7 α={alpha}")
