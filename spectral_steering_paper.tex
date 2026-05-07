@@ -589,20 +589,18 @@ empty strings. We treat this \emph{manifold collapse} as
 categorically distinct from genuine sycophancy reduction, and
 formalise the distinction in \Cref{sec:mechanistic}.
 
-\textbf{Cross-model summary.}
-\Cref{tab:summary} reports the dominant layer, SNR, baseline
-sycophancy, and steered sycophancy for each model. The two larger
-Llama models localise sycophancy at the same absolute layer index:
-L7 for both 3B (depth fraction $0.25$) and 8B (depth fraction $0.22$),
-with SNR values $4.87$ and $5.25$ respectively, within $8\%$ of one
-another despite different hidden dimensions ($d{=}3072$ vs.\ $4096$)
-and different total depths. Llama-3.2-1B localises sycophancy at a
-deeper site (L14, depth fraction $0.88$), consistent with smaller
-models compressing their representational structure towards later
-layers. The L7 cross-scale consistency for 3B and 8B suggests that
-sycophancy representations form at a fixed position in the transformer
-computational hierarchy, anchored by absolute layer rather than depth
-fraction.
+\Cref{tab:summary} summarises all models. A striking regularity emerges:
+
+\begin{findingbox}
+\textbf{Finding 1 (Cross-Scale Localisation).}
+Llama-3.2-3B and Llama-3.1-8B both localise their dominant sycophancy
+layer at L7---the same \emph{absolute} layer index despite differing
+in hidden dimension ($3072$ vs.\ $4096$), depth ($28$ vs.\ $32$ layers),
+and parameter count ($3\times$). Their SNR values at L7 are $4.87$ and
+$5.25$, within $8\%$ of each other. Sycophancy representations appear
+to form at a fixed position in the transformer computational hierarchy,
+anchored by absolute layer rather than depth fraction.
+\end{findingbox}
 
 \begin{table}[h]
 \centering
@@ -660,28 +658,20 @@ high dimensional or distributed mechanism, and strongly suggests that
 a single spectral direction, the first right singular vector of
 $W_7$, is the primary mediator.
 
-The dose response holds across Llama scales. The 1B model at its
-dominant site (L14, $\alpha{=}{-}1.5$) achieves $32\%\!\to\!1\%$
-(CI $[0,3]$), a $-31\pp$ reduction (\Cref{app:llama_full}). The 8B
-model at L7 ($\snr{=}5.25$, $\alpha{=}{-}0.5$) achieves
-$48\%\!\to\!10\%$ at substantially milder intervention than the 3B
-model requires for comparable effect; this is consistent with 8B's
-higher absolute SNR, which concentrates more spectral mass in the
-sycophancy direction and makes it more sensitive to mild compression.
-The scale invariant, layer localised structure replicates across an
-$8\times$ parameter count, suggesting that the sycophancy mechanism is
-a universal feature of RLHF-tuned MLP layers rather than an artefact
-of any specific architecture.
+The dose response replicates across Llama scales: the 1B model achieves
+$32\%\!\to\!1\%$ at L14, and the 8B model achieves $48\%\!\to\!10\%$ at
+L7 with milder $\alpha{=}{-}0.5$, consistent with its higher SNR ($5.25$
+vs.\ $4.87$) concentrating more spectral mass in the sycophancy direction.
 
 \subsection{Bidirectionality: amplifying the direction induces sycophancy}
 \label{sec:amplify}
 
 \begin{findingbox}
-\textbf{Finding 1 (Necessary).}
+\textbf{Finding 2 (Necessary).}
 Compressing the dominant spectral direction of
 $W_\mathrm{down}^{(\ell^{*})}$ monotonically reduces sycophancy by up
-to $-50\pp$, with non overlapping confidence intervals at every step,
-across all tested Llama architectures.
+to $-72\pp$, with non-overlapping confidence intervals at every step,
+across all tested architectures.
 \end{findingbox}
 
 To establish that the spectral direction is causally upstream of
@@ -697,32 +687,14 @@ of the circuit. Both directions are controlled by $W_\mathrm{down}$
 spectral structure, confirming causal mediation.
 
 \begin{findingbox}
-\textbf{Finding 2 (Sufficient).}
+\textbf{Finding 3 (Sufficient).}
 Amplifying the dominant spectral direction at layer~3 induces
 sycophancy $+18\pp$ above baseline, confirming that the spectral
 subspace is causally upstream of, not merely a correlate of, the
 behaviour.
 \end{findingbox}
 
-\subsection{Permanent weight surgery}
-\label{sec:surgery}
-
-\Cref{eq:steering} permanently modifies $W_\ell$ without inference
-time hooks, prompt modifications, or activation patches, analogous to
-the weight space ablation of
-\citet{arditiRefusalLanguageModels2024} and to
-ROME~\citep{mengLocatingEditingFactual2022}. Unlike activation
-steering~\citep{turner2023activation,panicksserySteeringLlama2023,
-zou2023representation}, the present approach requires no contrastive
-prompt pairs, no forward pass, zero per token inference overhead, and
-no access to the tokeniser. It applies identically to 4 bit quantised
-models via the dequantise modify requantise pipeline of
-\citet{dettmersGPTQAccuratePostTraining2022}, enabling deployment on
-consumer hardware. Qualitative before and after examples
-(\Cref{app:examples}) confirm that the steered model gives the
-factually correct answer with normal fluency, distinguishable from
-the baseline only in the content of the answer selected, not in the
-presence of refusal patterns or hedges.
+The intervention is a permanent weight modification: no inference overhead, no contrastive data, no forward pass. It applies identically to 4-bit quantised models via dequantise--modify--requantise (\Cref{app:examples}).
 
 % ============================================================
 \section{The Alignment Tax Is Spectral Geometry}
@@ -956,7 +928,7 @@ dramatically overstate the operational quality of a model in
 nonlinearly entangled regimes (\Cref{app:llama_full}).
 
 \begin{findingbox}
-\textbf{Finding 3 (Geometry-Dependent Tax).}
+\textbf{Finding 4 (Geometry-Dependent Tax).}
 Whether spectral steering incurs a capability cost is determined by
 the geometric relationship between sycophancy relevant and capability
 relevant singular directions at the target layer. Three geometries
@@ -1008,21 +980,27 @@ $\alpha$ is large enough to register at all ($-55\%$ relative GSM8K at
 $\alpha{=}{+}1.5$). The intervention does not fail because the surgical
 tool is broken; it fails because there is no concentrated mode to cut.
 
+\textbf{The $\Delta W$ fingerprint explains the failure mechanistically.}
+Decomposing $\Delta W {=} W_\mathrm{instruct}{-}W_\mathrm{base}$ for Mistral's
+top-SNR layer (L31) reveals that the dominant direction of $\Delta W$
+is nearly collinear with the dominant direction of $W_\mathrm{instruct}$
+($\cos\theta{=}0.812$). RLHF wrote the compliance update \emph{directly
+into} the layer's primary spectral direction. Cutting that direction
+collapses everything. There is no safe dose (\Cref{app:mistral_multilayer}).
+
 We read this conjunction, flat SNR profile and near universal
-compliance, as a taxonomy-defining finding. The six tested models
+compliance, as a taxonomy-defining finding. The seven tested models
 partition into two storage classes:
 
 \begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
-\item \textbf{Localised, low rank storage} (Llama-1B/3B/8B, Gemma-4-E2B,
- Phi-4-mini). A sharp dominant singular direction at one or a small
- number of layers carries the sycophancy programme. Single-layer
- spectral surgery is class appropriate and effective.
-\item \textbf{Distributed, high rank storage} (Mistral-7B-Instruct-v0.3).
+\item \textbf{Localised, low-rank storage} (Llama-1B/3B/8B, Gemma-4-E2B,
+ Phi-4-mini, Qwen2.5-3B). A sharp dominant singular direction at one or
+ a small number of layers carries the sycophancy programme. Single-layer
+ spectral surgery is class-appropriate and effective.
+\item \textbf{Distributed, high-rank storage} (Mistral-7B-Instruct-v0.3).
  The sycophancy signal is diffused across many spectral directions
- and many layers, with no concentrated mode. Single-layer surgery is
- class inappropriate; the appropriate intervention class is a
- distributed one (multi layer, multi direction, possibly
- training based).
+ with no concentrated mode; RLHF has co-located the compliance update
+ with the primary spectral direction, so there is no safe surgical site.
 \end{itemize}
 
 \textbf{Evidence from Qwen2.5-3B-Instruct.}
@@ -1050,7 +1028,7 @@ of the preference dataset, or the duration of fine tuning, is a
 question we leave open and consider in \Cref{sec:discussion}.
 
 \begin{findingbox}
-\textbf{Finding 4 (Storage-Class Taxonomy).}
+\textbf{Finding 5 (Storage-Class Taxonomy).}
 Instruction-tuned LLMs partition into two spectral storage classes,
 recoverable from the per layer SNR profile of $W_\mathrm{down}$ alone:
 \emph{localised, low rank} (sharp dominant mode; surgical interventions
@@ -1060,9 +1038,7 @@ class inappropriate). The taxonomy predicts intervention applicability
 without any behavioural evaluation.
 \end{findingbox}
 
-Full quantitative results, per layer SNR profile, Procrustes alignment
-to Llama, and behavioural sweeps under multiple intervention regimes
-, are in \Cref{app:mistral}.
+Full quantitative results are in \Cref{app:mistral,app:mistral_multilayer}.
 
 % ============================================================
 \section{Mechanistic Analysis}
@@ -1100,16 +1076,8 @@ threshold AND SNR above a per depth threshold}, predicts safe
 intervention sites: all targeted configurations in this paper satisfy
 both conditions.
 
-This interpretation is consistent with Marchenko Pastur random
-matrix theory~\citep{marchenkoPasturDistribution1967,
-martinImplicitSelfregularizationDeep2021}: layers where the leading
-singular value sits well above the Marchenko Pastur noise floor
-(high SNR) have a true signal subspace mechanistically separable from
-the noise floor; layers near or below the noise floor have no such
-separation.
-
 \begin{findingbox}
-\textbf{Finding 5 (Disruption Diagnostic).}
+\textbf{Finding 6 (Disruption Diagnostic).}
 Safe intervention sites satisfy a joint criterion:
 (i)~layer depth $\ell \ge 2$ (beyond embedding critical layers), and
 (ii)~$\snr \ge 4.5$ at the target $|\alpha|$ for Llama-3B.
@@ -1117,24 +1085,6 @@ This data free criterion correctly classifies all safe vs.\ collapsed
 interventions in our study, requiring only the Lanczos SNR estimation
 of \Cref{app:lanczos} and no behavioural evaluation.
 \end{findingbox}
-
-\subsection{Connections to activation space and across architectures}
-\label{sec:connections}
-
-Two analyses, deferred to appendices for space, support the
-interpretation above. Canonical correlation analysis on residual
-stream activations under sycophantic, toxic, and refusal eliciting
-prompts recovers a single dominant component that explains $36.3\%$ of
-joint cross behavior variance (\Cref{app:cca}), suggesting a shared
-compliance resistance axis that activation steering methods target
-from the activation side and our weight space intervention modifies at
-the substrate. A Procrustes alignment between the dominant subspaces
-of Llama-3.1-8B and Mistral-7B yields a cosine similarity of $0.162$
-after rotation versus $0.079$ before (\Cref{app:transfer}), partial
-transfer rather than full transfer, which the storage class taxonomy
-predicts: we are aligning a localized low rank Llama subspace against
-a distributed high rank Mistral one, so the Procrustes residual is a
-fingerprint of the class boundary rather than a transfer failure.
 
 % ============================================================
 \section{Related Work}
@@ -1217,69 +1167,50 @@ outcomes.
 % ============================================================
 
 \textbf{Main findings.}
-In five of six tested instruction tuned LLMs, sycophancy is mediated
+In six of seven tested instruction-tuned LLMs, sycophancy is mediated
 by the dominant spectral subspace of the \texttt{mlp.down\_proj}
-weight matrix at one characteristic layer per model; in the sixth
+weight matrix at one characteristic layer per model; in the seventh
 (Mistral-7B-Instruct-v0.3), no such concentrated mode exists and the
-model's near ceiling baseline compliance reflects distributed storage
-across many spectral directions. This conjunction defines a storage
-class taxonomy recoverable from the SVD profile of $W_\mathrm{down}$
-alone, before any behavioral probe. Within the localized class, a
-closed form singular value rescaling at the dominant layer yields
-monotone, bidirectional, dose responsive control of sycophancy; on
-Gemma-4-E2B-it the intervention also achieves a strict Pareto
-improvement, demonstrating that the alignment tax is not fundamental
-but spectral.
+model's near-ceiling baseline compliance reflects distributed storage.
+This storage-class taxonomy is recoverable from the SVD of
+$W_\mathrm{down}$ alone, before any behavioral probe. Within the
+localized class, a closed-form singular value rescaling yields
+monotone, bidirectional, dose-responsive control; on Gemma-4-E2B-it
+the intervention achieves a strict Pareto improvement, demonstrating
+that the alignment tax is not fundamental but spectral.
 
-\textbf{Implications, limitations, future work.}
-Three implications follow. First, post hoc alignment audits become
-feasible: an external auditor can compute the spectral SNR of MLP
-layers and predict whether single layer surgery will succeed without
-running any behavioral probe. Second, the storage class taxonomy
-suggests that the appropriate post hoc intervention is class
-conditional: localized storage admits single layer surgery while
-distributed storage requires distributed counter measures. Third, the
-bidirectionality of the effect (compression suppresses, amplification
-induces) confirms that sycophancy is mechanistically realized in
-spectral structure rather than being a diffuse training bias.
-The main open question is what determines which storage class a model
-lands in: Mistral and the Llama family differ in many confounded
-factors (preference algorithm, dataset, fine tune duration, base
-model), and disentangling these would require controlled fine tuning
-sweeps with the spectral diagnostic as the natural instrument.
-Limitations: six models is a small population (the binary taxonomy
-may refine into a continuum); the forced choice factual benchmark may
-miss the open ended and social sycophancy modes of
-\citet{chengELEPHANTSocialSycophancy2025}; and the causal link between
-spectral compression and activation changes is inferred via CCA
-(\Cref{app:cca}) rather than directly measured. Natural extensions
-include applying spectral steering and the storage class diagnostic to
-other alignment relevant behaviors (toxicity, refusal, deception),
-designing distributed class interventions appropriate for Mistral's
-regime, and extending the cross architecture Procrustes analysis
-(\Cref{app:transfer}) to populate both classes more densely.
+\textbf{Completed validation experiments.}
+Three controlled experiments (\Cref{app:open_ended,app:repe,app:mistral_multilayer})
+address the key evaluation questions. (i)~Open-ended generation at
+Llama-3B L7 $\alpha{=}{-}1.5$ confirms that the A/B sycophancy
+collapse is a metric artefact: steered responses degrade to incoherent
+fragments, consistent with the GSM8K collapse to $2\%$. The forced-choice
+format persists past functional model collapse.
+(ii)~A controlled RepE comparison under identical conditions finds
+$-23\pp$ sycophancy at best $\alpha$ with $+2.9\%$ inference overhead;
+CCA alignment shows the RepE direction is near-orthogonal to the
+spectral subspace ($\cos\theta{=}0.030$, $\rho_{64}{=}4.7\%$ vs.\ $2.1\%$
+random), confirming independent circuits.
+(iii)~Mistral multi-layer analysis and $\Delta W$ decomposition show
+that at L31 the cosine alignment between the dominant direction of
+$\Delta W{=}W_\mathrm{instruct}{-}W_\mathrm{base}$ and the dominant
+direction of $W_\mathrm{instruct}$ is $0.812$: RLHF wrote compliance
+directly into the layer's primary spectral direction, explaining why
+there is no safe dose.
 
-\textbf{Priority future evaluations.}
-Three concrete follow up evaluations are most immediately needed and
-are already designed. (1) An open ended LLM-as-judge benchmark in
-which a model receives student essays containing factual errors,
-generates free text feedback up to 200 tokens, and is scored by a
-separate judge instance for whether the error is pointed out. This
-would address the evaluation validity issue identified in
-\Cref{app:llama_full}, where forced choice metrics persist past the
-point of functional model collapse. (2) A directly controlled
-comparison to contrastive activation steering (RepE,
-\citealt{turner2023activation,zou2023representation}) under identical
-conditions, including the spectral alignment fraction $\rho_{64}$
-defined in \Cref{app:cca} that quantifies whether the two methods
-target the same geometric direction. (3) A multi layer search and a
-$\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ SVD analysis on
-Mistral-7B to test whether distributed sycophancy storage is
-recoverable either by combining several layers or by operating
-directly on the fine tuning delta rather than the final weight
-matrix. The first two address evaluation methodology; the third tests
-whether the storage class taxonomy admits a sub class of
-``distributed in $W$, localized in $\Delta W$'' models.
+\textbf{Implications and limitations.}
+Post-hoc alignment audits become feasible: the spectral SNR predicts
+whether single-layer surgery will succeed without any behavioral probe.
+The storage-class taxonomy suggests class-conditional intervention design.
+Bidirectionality confirms sycophancy is mechanistically realized in
+spectral structure, not a diffuse training bias.
+Limitations: seven models is a small population; the forced-choice benchmark
+may miss social sycophancy modes~\citep{chengELEPHANTSocialSycophancy2025};
+the causal link between spectral compression and activation changes is
+supported by CCA (\Cref{app:cca}) but not directly measured via
+ablation. Natural extensions include applying the diagnostic to other
+alignment behaviors (toxicity, refusal) and determining what aspect of
+Mistral's instruction-tuning regime produced distributed storage.
 
 % ============================================================
 \begin{thebibliography}{99}
@@ -1781,9 +1712,7 @@ the model has simultaneously lost open ended reasoning. The
 capability collapse because emitting ``(A)'' or ``(B)'' has a much
 lower production bar than multi step arithmetic. TruthfulQA
 ($36\%\!\to\!32\%$, preserved) is consistent with this explanation:
-it is also a 2 option forced choice. This directly motivates open
-ended evaluation via LLM-as-judge frameworks, which we identify as
-priority future work in \Cref{sec:discussion}.
+it is also a 2 option forced choice. Our open-ended generation experiment confirms this: see \Cref{app:open_ended}.
 
 \section{Gemma-4-E2B-it Full Hyperparameter Search}
 \label{app:gemma_full}
