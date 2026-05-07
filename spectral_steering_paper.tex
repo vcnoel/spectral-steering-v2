@@ -591,7 +591,8 @@ $^\S$Llama-3B at $\alpha{=}{-}1.5$ shows the headline A/B reduction; capability
 is preserved only at $\alpha{=}{-}0.5$ ($-17\pp$ syco, $-32\pp$ GSM8K), see \Cref{sec:llama3b_entanglement}.
 $^\natural$Gemma-4: dominant single-layer site from $N{=}30$ sweep; multi-layer Pareto in \Cref{sec:gemma_pareto}.
 $^\ddagger$Mistral: inert at mild $\alpha$; collapses to $0\%$ at $\alpha{=}{-}1.0$ (manifold collapse, not genuine reduction); see \Cref{sec:mistral}.
-$^\P$$N{=}50$ sweep, $\alpha{=}{-}1.5$; no capability benchmark.}
+$^\P$$N{=}50$ sweep, $\alpha{=}{-}1.5$; no capability benchmark.
+$^\dagger$Qwen2.5-7B: validated at $N{=}100$ ($\alpha{=}{-}0.7$); GSM8K $52\%{\to}20\%$ ($-32\pp$). Aggressive sweep ($\alpha{=}{-}1.5$) gives $-76\pp$ but exceeds safe regime $|\alpha|\ll 1/\mathrm{SNR}{=}0.19$.}
 \label{tab:summary}
 \begin{tabular}{lccccccc}
 \toprule
@@ -608,7 +609,7 @@ Phi-4-mini & 32 & L10 & 4.59 & $-0.2$ & 86\% & 79\% [73,85] & $-7\pp$ \\
 Mistral-7B-v0.3$^\ddagger$ & 32 & L31 & 2.69 & $-0.5$ & 98\% & 98\% & $0\pp$ \\
 \midrule
 Qwen2.5-3B$^\P$ & 36 & L6 & 6.32 & $-1.5$ & 82\% & 10\% & $-72\pp$ \\
-Qwen2.5-7B$^\P$ & 28 & L16 & 5.15 & $-1.5$ & 90\% & 14\% & $-76\pp$ \\
+Qwen2.5-7B$^\dagger$ & 28 & L16 & 5.15 & $-0.7$ & 90\% [84,95] & 43\% [34,52] & $-47\pp$ \\
 SmolLM2-1.7B$^\P$ & 24 & L12 & 4.35 & $-1.5$ & 72\% & 16\% & $-56\pp$ \\
 \bottomrule
 \end{tabular}
@@ -968,6 +969,15 @@ This data free criterion correctly classifies all safe vs.\ collapsed
 interventions in our study, requiring only the Lanczos SNR estimation
 of \Cref{app:lanczos} and no behavioural evaluation.
 \end{findingbox}
+
+\subsection{Matrix specificity: why \texttt{down\_proj}?}
+\label{sec:matrix_ablation}
+
+A natural ablation is to apply the same spectral rescaling to \texttt{up\_proj} or \texttt{gate\_proj} at the same layer and measure the effect. We run this comparison on Llama-3.2-3B-Instruct at the auto-selected 75th-percentile depth layer (L21, $\snr_\mathrm{down}{=}3.03$, $\snr_\mathrm{gate}{=}5.97$, $N{=}50$ syco, $N{=}30$ GSM8K).
+
+The result reveals a double specificity. At L21, \texttt{down\_proj} is spectrally quiet ($\snr{=}3.03$) and behaviorally inert: sycophancy barely moves ($\Delta{\approx}0\pp$) and GSM8K is unaffected at mild $\alpha$. The \texttt{gate\_proj} at the same layer has high SNR ($5.97$) and does reduce sycophancy (${-}34$--${-}56\pp$ at $\alpha{=}{-}0.5$ to $-1.5$) — but destroys all reasoning capability simultaneously (GSM8K $70\%{\to}0\%$ at \emph{every} dose). The \texttt{up\_proj} shows an intermediate pattern: modest sycophancy reduction (${-}18$--${-}30\pp$) accompanied by progressive capability damage.
+
+This confirms that our method's targeted effect requires \emph{both} the correct matrix (\texttt{down\_proj}) and the correct layer (the dominant spectral site identified by the SNR prefilter). \texttt{gate\_proj} surgery is indiscriminate: its high SNR at L21 is entangled with core computation, so any dose strong enough to suppress compliance also suppresses reasoning. \texttt{down\_proj} at the dominant layer (L7 for Llama-3.2-3B) is different because RLHF specifically inscribed compliance into a direction that is \emph{low-rank and separable} from the main computational load — a property revealed by the ΔW analysis ($\cos\theta{=}0.025$) and exploited by our method.
 
 % ============================================================
 \section{Related Work}
@@ -1917,6 +1927,8 @@ is in functional collapse. The A/B metric's apparent $-52\pp$ reduction
 is an artifact of the metric's low production bar, not a genuine
 sycophancy correction. The capability-preserving operating point remains
 $\alpha{=}{-}0.5$.
+
+\textbf{Mild-$\alpha$ open-ended probe.} We repeated the same $N{=}25$ essay experiment at the capability-preserving operating point ($\alpha{=}{-}0.5$, L7). The judge again reports $100\%$ sycophancy for both baseline and steered conditions — but inspection of the actual responses reveals the judge's limitation: \emph{both} conditions produce corrections of the embedded factual error (``Your paragraph has a small mistake: ...''). The 1B judge cannot distinguish a politely framed correction (``Good start, but the correct formula is...'') from sycophantic validation. This exposes a deeper issue with the task: in \emph{open-ended} format, Llama-3.2-3B is not strongly sycophantic even at baseline — it hedges with corrections framed politely. The A/B forced-choice format is more diagnostic precisely because it removes the hedging option, forcing a binary commitment to the user's (wrong) answer. The two formats therefore measure related but distinct phenomena: the A/B format captures \emph{conformity under binary pressure}; open-ended evaluation captures \emph{willingness to confront in free text}. Our spectral intervention reduces the former; its effect on the latter requires a more capable judge than the 1B model used here.
 
 \section{RepE Controlled Experiment}
 \label{app:repe}
