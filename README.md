@@ -10,7 +10,7 @@
 
 Instruction-tuned LLMs frequently agree with users even when users are factually wrong — a behaviour called sycophancy. We show that in six of seven tested models, this behaviour is **mediated by the dominant singular subspace of a single MLP weight matrix**, and can be suppressed or induced by a closed-form rescaling of that subspace. No training, no data, no inference overhead.
 
-The headline result: on Gemma-4-E2B-it, we achieve a **strict Pareto improvement** — less sycophancy *and* better reasoning simultaneously. On Llama-3.2-3B/8B, sycophancy localises to the same absolute layer (L7) across a 3× parameter gap.
+The headline result: on Gemma-4-E2B-it, we achieve a **strict Pareto improvement** — less sycophancy *and* better reasoning simultaneously. On Llama-3.2-3B/8B, sycophancy localises to the same absolute layer (L7) across a 3× parameter gap, with SNR values within 8% of each other.
 
 ---
 
@@ -26,7 +26,7 @@ W' = U Σ' Vᵀ
 α < 0 compresses the dominant spectral directions (→ reduces sycophancy).  
 α > 0 amplifies them (→ induces sycophancy on neutral inputs).
 
-The target layer is selected by the per-layer spectral SNR = σ₁(ℓ) / σ̃(ℓ), computable in seconds from weights alone using a Lanczos estimator.
+The target layer is selected by the per-layer spectral SNR = σ₁(ℓ) / σ̃(ℓ), computable in seconds from weights alone. Safe operating regime: |α| ≪ 1/SNR_ℓ.
 
 ---
 
@@ -34,12 +34,12 @@ The target layer is selected by the per-layer spectral SNR = σ₁(ℓ) / σ̃(�
 
 | Finding | Result |
 |---------|--------|
-| Cross-scale localisation | Llama-3B and 8B both peak at **L7** (same absolute layer, different depth) |
+| Cross-scale localisation | Llama-3B and 8B both peak at **L7** — same absolute layer, SNR within 8% |
 | Strict Pareto | Gemma-4-E2B-it: −6.1% sycophancy **and** +8.8% GSM8K simultaneously |
 | Storage taxonomy | Models split into *localised* (surgery works) vs *distributed* (Mistral-7B) |
-| SNR dosing guide | Safe regime: \|α\| ≪ 1/SNR_ℓ — predicts which layers collapse at what dose |
-| ΔW fingerprint | Mistral L31: cos(ΔW_u1, W_u1) = 0.812 — RLHF wrote compliance into the dominant direction |
-| Independent circuits | RepE and spectral surgery target orthogonal directions (cos = 0.030) |
+| ΔW fingerprint | Mistral L31: cos(ΔW_u1, W_u1) = 0.812 vs Llama L7: 0.025 — explains why surgery fails on Mistral |
+| SNR dosing guide | Predicts which layers collapse at what dose — no behavioural testing needed |
+| Independent circuits | RepE and spectral surgery target near-orthogonal directions (cos = 0.030) |
 
 ---
 
@@ -78,6 +78,9 @@ python scripts/steer.py validate \
 python scripts/steer.py combo-hunt \
   --model google/gemma-2-2b-it \
   --n-syco 200
+
+# ΔW fingerprint (explains storage-class taxonomy)
+python scripts/run_delta_w_comparison.py
 ```
 
 Results are written to `data/results/`.
@@ -107,4 +110,4 @@ environment.yml               — conda environment (gsp)
 
 `spectral_steering_paper.tex` — compile with pdflatex or your preferred LaTeX engine.
 
-The paper is self-contained. Appendices cover: full layer sweep tables, Gemma-4 hyperparameter search, Phi-4 entanglement analysis, Mistral spectral fingerprint, CCA and Procrustes analysis, response examples, method comparison, capability collapse diagnostic (open-ended judge), RepE controlled experiment, Mistral ΔW analysis.
+Appendices cover: full layer sweep tables, Gemma-4 hyperparameter search, Phi-4 entanglement analysis, Mistral spectral fingerprint, CCA and Procrustes analysis, response examples, method comparison, capability collapse diagnostic, RepE controlled experiment, Mistral ΔW analysis with Llama contrastive control.
