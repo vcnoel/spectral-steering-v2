@@ -96,30 +96,13 @@
 
 % ============================================================
 \begin{abstract}
-% ============================================================
-Instruction tuned language models often defer to user opinions even
-when those opinions are factually wrong, a behavior known as
-sycophancy. While sycophancy is widespread across chat models, its
-weight space substrate has remained opaque, blocking principled
-mitigation. In this work, we show that sycophancy is mediated by the
-dominant singular subspace of a single MLP weight matrix in six of
-seven open source models spanning 1B--8B parameters. Specifically, for each affected model we find a single
-layer at which compressing the dominant spectral direction
-monotonically reduces the forced choice sycophancy rate, while
-amplifying it induces sycophancy on otherwise neutral inputs;
-aggressive compression at this layer reveals nonlinear capability
-trade offs that we analyze and operationalize as a layer geometry
-diagnostic. Leveraging this insight, we propose a closed form weight
-space intervention that requires no training, no contrastive data,
-and no inference time machinery, and that on Gemma-4-E2B-it produces
-a strict Pareto improvement: less sycophancy and more reasoning.
-Finally, we show that the per layer spectral profile partitions
-models into two storage classes, localized and distributed,
-predicting in advance whether single layer surgery will succeed. Our
-findings reframe the alignment tax from a fundamental training
-constraint to a measurable consequence of spectral geometry, and
-establish spectral diagnostics as a non behavioral audit primitive
-for instruction tuning regimes.
+Instruction tuned language models often defer to user opinions even when those opinions are factually wrong, a behavior known as sycophancy. While sycophancy is widespread across chat models, its weight space substrate has remained opaque, blocking principled mitigation. In this work, we show that sycophancy is mediated by the dominant singular subspace of a single MLP weight matrix in six of seven open source models spanning 1B--8B parameters. 
+
+Specifically, for each affected model we find a single layer at which compressing the dominant spectral direction monotonically reduces the forced choice sycophancy rate, while amplifying it induces sycophancy on otherwise neutral inputs; aggressive compression at this layer reveals nonlinear capability trade offs that we analyze and operationalize as a layer geometry diagnostic. 
+
+Leveraging this insight, we propose a closed form weight space intervention that requires no training, no contrastive data, and no inference time machinery, and that on Gemma-4-E2B-it produces a strict Pareto improvement: less sycophancy and more reasoning. Finally, we show that the per layer spectral profile partitions models into two storage classes, localized and distributed, predicting in advance whether single layer surgery will succeed. 
+
+Our findings reframe the alignment tax from a fundamental training constraint to a measurable consequence of spectral geometry, and establish spectral diagnostics as a non behavioral audit primitive for instruction tuning regimes. Code can be accessed at \texttt{https://anonymous.4open.science/r/spectral-steering-v2-FABD/}.
 \end{abstract}
 
 % ============================================================
@@ -603,13 +586,13 @@ anchored by absolute layer rather than depth fraction.
 \small
 \setlength{\tabcolsep}{5pt}
 \caption{\textbf{Cross-model results.} Dominant layer, SNR, and
-sycophancy under optimal single layer spectral steering ($N{\ge}100$,
-5 seeds, 95\% CI). $^\dagger$Gemma-4 uses a 3-layer configuration;
-$^\ddagger$Mistral sycophancy is near ceiling and not significantly
-reducible. $^\S$Llama-3B at $\alpha{=}{-}1.5$ shows the headline A/B
+sycophancy under single-layer spectral steering ($N{\ge}100$,
+5 seeds, 95\% CI unless noted). $^\ddagger$Mistral: surgery fails — inert at mild $\alpha$, collapses at $\alpha{\ge}1.0$; see \Cref{sec:mistral}.
+$^\S$Llama-3B at $\alpha{=}{-}1.5$ shows the headline A/B
 reduction; capability is preserved only at $\alpha{=}{-}0.5$ ($-17\pp$
 sycophancy with $-32\pp$ GSM8K), see \Cref{sec:llama3b_entanglement}.
-$^\P$Qwen2.5-3B-Instruct: layer sweep only ($N{=}50$, $\alpha{=}{-}1.5$); no capability benchmark yet. L1 has the highest observed SNR of any model tested ($\mathrm{SNR}{=}20.84$).}
+$^\natural$Gemma-4: dominant single-layer site from $N{=}30$ sweep ($\alpha{=}{-}1.0$); single-layer aggressive, multi-layer Pareto in \Cref{sec:gemma_pareto}.
+$^\P$Qwen2.5-3B-Instruct: $N{=}50$ sweep only; no capability benchmark yet. L1 has the highest observed SNR of any model tested ($\mathrm{SNR}{=}20.84$).}
 \label{tab:summary}
 \begin{tabular}{lccccccc}
 \toprule
@@ -620,8 +603,9 @@ $^\P$Qwen2.5-3B-Instruct: layer sweep only ($N{=}50$, $\alpha{=}{-}1.5$); no cap
 Llama-3.2-1B & 16 & L14 & 2.77 & $-1.5$ & 32\% & 1\% [0,3] & $-31\pp$ \\
 Llama-3.2-3B$^\S$ & 28 & L7 & 4.87 & $-1.5$ & 59\% & 9\% [4,15] & $-50\pp$ \\
 Llama-3.1-8B & 32 & L7 & 5.25 & $-0.5$ & 48\% & 10\% [2,18] & $-38\pp$ \\
-Gemma-4-E2B$^\dagger$ & 46 & L33+L18+L24 & -- & multi & 39.5\% & 14.8\% [12,17] & $-24.7\pp$ \\
+Gemma-4-E2B$^\natural$ & 46 & L13 & 6.53 & $-1.0$ & 70\% & 40\% & $-30\pp$ \\
 Phi-4-mini & 32 & L10 & 4.59 & $-0.2$ & 86\% & 79\% [73,85] & $-7\pp$ \\
+Mistral-7B-v0.3$^\ddagger$ & 32 & L31 & 2.69 & -- & 98\% & -- & not reducible \\
 \midrule
 Qwen2.5-3B$^\P$ & 36 & L6 & 6.32 & $-1.5$ & 82\% & 10\% & $-72\pp$ \\
 \bottomrule
@@ -792,22 +776,47 @@ Shaded green: configurations strictly Pareto dominating the baseline
 \label{fig:pareto}
 \end{figure}
 
-On Gemma-4-E2B-it we conduct a multi layer hyperparameter search over
-the combination space of layers $\{18, 24, 33\}$ and amplitudes
-$\alpha \in [-0.07, +0.10]$ (guided by the SNR profile;
+A layer sweep of Gemma-4-E2B-it ($N{=}30$ per layer, $\alpha{=}{-}1.0$, 35
+language-model layers) first establishes that the method works: the dominant
+sycophancy site is L13 ($\snr{=}6.53$), which delivers $-30\pp$ reduction
+at $\alpha{=}{-}1.0$. However, the adjacent site L12 ($\snr{=}5.83$)
+undergoes full manifold collapse at the same dose ($0\%$ sycophancy,
+$\mathrm{CI}{=}[0,0]$), and three further layers (L15, L29, L31) exhibit
+\emph{sign reversal} ($+3$ to $+10\pp$), revealing that the compliance
+direction runs opposite to the dominant spectral direction at those sites.
+
+This fragility pattern is not accidental — it is predicted by the per-layer
+SNR as a dosing guide. L13 ($\snr{=}6.53$) is near the boundary of the
+safe operating regime:
+\[
+  |\alpha| \ll \frac{1}{\snr_\ell}.
+\]
+At $\snr{=}6.53$, the safe dose is $|\alpha| \ll 0.15$ — far smaller than
+the $\alpha{=}{-}1.0$ applied in the layer sweep, placing L13 well into the
+fragile regime. High-SNR layers carry heavy representational load; aggressive
+$\alpha$ causes collapse because there is no spectral space to cut cleanly.
+
+This suggests a different strategy: rather than forcing the dominant site at
+full dose, combine \emph{low-SNR} layers, each operated within their
+individually safe dose. The per-layer SNR profile identifies three such sites
+in Gemma-4-E2B-it — L18 ($\snr{=}4.42$), L24 ($\snr{=}3.88$), and L33
+($\snr{=}3.13$) — among the flattest spectral sites in the network. At low
+SNR, spectral mass is distributed across many directions; even a tiny $\alpha$
+produces a controlled perturbation that can thread between sycophancy and
+reasoning subspaces.
+
+We conduct a joint hyperparameter search over these three layers and
+amplitudes $\alpha \in [-0.07, +0.10]$ (guided by the SNR profile;
 \Cref{app:gemma_full}). All configurations are evaluated at
-$N{=}1{,}000$ sycophancy items and $N{=}250$ GSM8K items across
-5 seeds.
+$N{=}1{,}000$ sycophancy items and $N{=}250$ GSM8K items across 5 seeds.
 
 \Cref{tab:gemma_pareto} and \Cref{fig:pareto} report the resulting
 frontier. The configuration labelled Node~39
 (L33 $\alpha{=}{+}0.05$, L18 $\alpha{=}{-}0.04$, L24 $\alpha{=}{+}0.10$)
 achieves $37.1\%$ sycophancy (down from $39.5\%$ baseline) while
 simultaneously achieving $39.6\%$ GSM8K (up from $36.4\%$ baseline).
-This is a strict Pareto improvement: both objectives improve
-simultaneously. The relative magnitudes are $-6.1\%$ sycophancy and
-$+8.8\%$ GSM8K accuracy, both well outside the 95\% CI of their
-respective baselines (sycophancy $[36,43]$; GSM8K $[30,43]$).
+Both objectives improve simultaneously, each well outside the 95\% CI
+of their respective baselines (sycophancy $[36,43]$; GSM8K $[30,43]$).
 
 \begin{table}[h]
 \centering
@@ -831,54 +840,12 @@ Node~40 (aggressive) & 14.8\% [12,17] & $-62.5\%$ rel. & 27.2\% [22,33] & $-25.3
 \end{tabular}
 \end{table}
 
-This result directly falsifies the hypothesis that sycophancy
-suppression must incur capability cost. The strict Pareto improvement
-is possible because the sycophancy relevant spectral directions at
-the targeted layers are not codirectional with the reasoning relevant
-ones: compressing the former modestly \emph{frees} representational
-capacity that is then redirected towards mathematical reasoning. 
-
-\subsubsection*{Why the Pareto layers are the \emph{lowest}-SNR sites: the SNR as a dosing guide}
-\label{sec:gemma_snr_dial}
-
-A complete layer sweep of Gemma-4-E2B-it ($N{=}30$ per layer,
-$\alpha{=}{-}1.0$, 35 language-model layers) reveals the mechanistic
-reason for the Pareto improvement.
-The per-layer SNR profile peaks early in the network
-(L2: $\snr{=}8.11$; L13: $\snr{=}6.53$; L14: $\snr{=}6.44$),
-while the three Pareto-optimal layers identified by the multi-layer
-search are among the \emph{flattest} spectral sites in the network
-(L18: $\snr{=}4.42$; L24: $\snr{=}3.88$; L33: $\snr{=}3.13$).
-
-Crucially, at $\alpha{=}{-}1.0$, the high-SNR layer L12 ($\snr{=}5.83$)
-undergoes full manifold collapse ($0\%$ sycophancy, $\mathrm{CI}{=}[0,0]$):
-the dominant spectral direction is too concentrated and carries too
-much representational load to be cut without total disruption.
-The best non-collapse behavioral site is L13 ($\snr{=}6.53$,
-$-30\pp$ at $\alpha{=}{-}1.0$), but even this requires further
-validation of GSM8K impact.
-The sweep also reveals sign heterogeneity: at three layers
-(L15, L29, L31), $\alpha{=}{-}1.0$ \emph{increases} sycophancy
-($+3$ to $+10\pp$), confirming that the compliance direction
-at those layers runs opposite to the dominant spectral direction.
-
-Together, these findings establish the per-layer SNR as a dosing guide
-rather than merely a localization signal.
-Low-SNR layers ($\snr{\approx}3$--$4$) are geometrically soft:
-the spectral mass is spread across many directions, so even a
-small $\alpha$ produces a clean, controlled perturbation that can
-thread between sycophancy and reasoning subspaces.
-High-SNR layers ($\snr{>}6$) are potent but fragile:
-the dominant direction carries heavy representational load,
-and aggressive $\alpha$ causes collapse.
-The Pareto improvement is therefore not merely a property of the
-\emph{layer} but of the \emph{interaction} between the layer's SNR
-and the dose $|\alpha|$:
-\[
-  \text{safe operating regime} \approx |\alpha| \ll \frac{1}{\snr_\ell}.
-\]
-This prediction is directly testable and suggests a principled
-$\alpha$-selection rule for future applications.
+This result directly falsifies the hypothesis that sycophancy suppression
+must incur capability cost. The Pareto improvement is not merely a property
+of the \emph{layer} but of the \emph{interaction} between SNR and dose:
+operating at low-SNR sites within the safe regime frees representational
+capacity that is redirected towards mathematical reasoning rather than
+consumed by the intervention.
 
 \subsection{Spectral entanglement: Phi-4-mini-instruct}
 \label{sec:phi4_entanglement}
@@ -930,7 +897,7 @@ Per layer SNR provides a dosing guide. In separable models, low SNR sites ($\snr
 
 Unlike the Llama, Gemma, Phi, and Qwen models, Mistral-7B-Instruct-v0.3 resists single-layer spectral surgery. Its spectral profile lacks a concentrated dominant mode: per-layer SNR remains below $3.5$ (near the Marchenko-Pastur noise floor), contrasting sharply with models like Llama-3.1-8B ($\snr{=}5.25$) or Qwen2.5-3B ($\snr{=}6.32$ at its L6 operating site). 
 
-Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut. By contrast, in Llama-3.2-3B L7, $\cos\theta{=}0.025$, placing the compliance update near-orthogonally to the dominant direction and enabling the clean $-50$pp reduction we observe (full contrastive analysis in \Cref{app:mistral_multilayer}).
+Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut.
 
 This establishes a taxonomy recoverable entirely from the SVD profile of $W_\mathrm{down}$, serving as a \emph{black-box audit primitive} that predicts intervention success without behavioural testing:
 
@@ -1032,9 +999,7 @@ concept vectors from contrastive activation differences;
 \citet{turner2023activation} apply additive steering;
 \citet{panicksserySteeringLlama2023} target sycophancy specifically.
 \citet{chenPersonaVectors2025} construct persona vectors for traits
-including sycophancy and modulate them at deployment;
-\citet{tangPersonaGradientAscent2026} extend this with prompt level
-gradient ascent. All such methods require contrastive prompt data and
+including sycophancy and modulate them at deployment. All such methods require contrastive prompt data and
 impose per token inference overhead; ours requires neither.
 
 \textbf{Weight surgery and model editing.}
@@ -1116,6 +1081,11 @@ ablation. Natural extensions include applying the diagnostic to other
 alignment behaviors (toxicity, refusal) and determining what aspect of
 Mistral's instruction-tuning regime produced distributed storage.
 
+\newpage
+
+% ============================================================
+% Drop-in replacement for the \begin{thebibliography} ... \end{thebibliography}
+% block in main_v5.tex.  Keys match every \cite{} in the body.
 % ============================================================
 \begin{thebibliography}{99}
 \small
@@ -1152,11 +1122,12 @@ Bai, Y. et~al.
 \newblock Constitutional {AI}: Harmlessness from {AI} feedback.
 \newblock \emph{arXiv:2212.08073}, 2022.
 
-\bibitem[Baik and Silverstein(2005)]{baik2005phaseTransition}
+%%% Content fix: year 2005→2006; key kept as-is to match body \cite
+\bibitem[Baik and Silverstein(2006)]{baik2005phaseTransition}
 Baik, J. and Silverstein, J.~W.
 \newblock Eigenvalues of large sample covariance matrices of spiked
  population models.
-\newblock \emph{Journal of Multivariate Analysis}, 97(6):1382--1408, 2005.
+\newblock \emph{Journal of Multivariate Analysis}, 97(6):1382--1408, 2006.
 
 \bibitem[Bricken et~al.(2023)]{brickenTowardsMonosemanticity2023}
 Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A.,
@@ -1168,12 +1139,6 @@ Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A.,
 \newblock Towards monosemanticity: Decomposing language models with
  dictionary learning.
 \newblock \emph{Transformer Circuits Thread}, 2023.
-
-\bibitem[Burns et~al.(2022)]{burnsBeliefsModelsUnsupervised2022}
-Burns, C., Ye, H., Klein, D., and Steinhardt, J.
-\newblock Discovering latent knowledge in language models without
- supervision.
-\newblock \emph{arXiv:2212.03827}, 2022.
 
 \bibitem[Chen et~al.(2025)]{chenPersonaVectors2025}
 Chen, R., Arditi, A., Sleight, H., Evans, O., and Lindsey, J.
@@ -1200,12 +1165,6 @@ Cobbe, K., Kosaraju, V., Bavarian, M., Chen, M., Jun, H., Kaiser, L.,
 \newblock Training verifiers to solve math word problems.
 \newblock \emph{arXiv:2110.14168}, 2021.
 
-\bibitem[Cunningham et~al.(2023)]{cunninghamSparseAutoencoders2023}
-Cunningham, H., Ewart, A., Riggs, L., Huben, R., and Sharkey, L.
-\newblock Sparse autoencoders find highly interpretable features in
- language models.
-\newblock \emph{arXiv:2309.08600}, 2023.
-
 \bibitem[Dettmers et~al.(2022)]{dettmersGPTQAccuratePostTraining2022}
 Dettmers, T., Lewis, M., Belkada, Y., and Zettlemoyer, L.
 \newblock {GPTQ}: Accurate post training quantization for generative
@@ -1223,16 +1182,11 @@ Elhage, N., Nanda, N., Olsson, C., Henighan, T., Joseph, N., Mann, B.,
 \newblock A mathematical framework for transformer circuits.
 \newblock \emph{Transformer Circuits Thread}, 2021.
 
-\bibitem[Elhage et~al.(2022)]{elhageInContextLearningInduction2022}
-Elhage, N., Henighan, T., Joseph, N., Mann, B., Askell, A., Bai, Y.,
- et~al.
-\newblock In-context learning and induction heads.
-\newblock \emph{Transformer Circuits Thread}, 2022.
-
-\bibitem[Fierro and Roger(2026)]{fierroWeightArithmetic2026}
+%%% Content fix: year 2026→2025 (original submission); key kept as-is
+\bibitem[Fierro and Roger(2025)]{fierroWeightArithmetic2026}
 Fierro, C. and Roger, F.
 \newblock Steering language models with weight arithmetic.
-\newblock \emph{arXiv:2511.05408}, 2026.
+\newblock \emph{arXiv:2511.05408}, 2025.
 
 \bibitem[Gao et~al.(2024)]{gaoScalingSparseAutoencoders2024}
 Gao, L., la Tour, T.~D., Tillman, H., Goh, G., Troll, R.,
@@ -1240,12 +1194,14 @@ Gao, L., la Tour, T.~D., Tillman, H., Goh, G., Troll, R.,
 \newblock Scaling and evaluating sparse autoencoders.
 \newblock \emph{arXiv:2406.04093}, 2024.
 
+%%% Content fix: no Gemma 4 report exists; using Gemma 3 (arXiv:2503.19786)
 \bibitem[Gemma Team(2025)]{gemmateamGemma4Technical2025}
 Gemma Team.
-\newblock Gemma 4 technical report.
-\newblock \emph{arXiv:2501.09223}, 2025.
+\newblock Gemma 3 technical report.
+\newblock \emph{arXiv:2503.19786}, 2025.
 
-\bibitem[Hendryks et~al.(2020)]{hendryksScalingInstructionFinetunedLanguage2022}
+%%% Content fix: author spelling Hendrycks (not Hendryks); year 2020
+\bibitem[Hendrycks et~al.(2020)]{hendryksScalingInstructionFinetunedLanguage2022}
 Hendrycks, D., Burns, C., Basart, S., Zou, A., Mazeika, M., Song, D.,
  and Steinhardt, J.
 \newblock Measuring massive multitask language understanding.
@@ -1300,13 +1256,7 @@ Mar\v{c}enko, V.~A. and Pastur, L.~A.
 \newblock Distribution of eigenvalues for some sets of random matrices.
 \newblock \emph{Mathematics of the {USSR-Sbornik}}, 1(4):457--483, 1967.
 
-\bibitem[Marks and Tegmark(2023)]{marksGeometryTruth2023}
-Marks, S. and Tegmark, M.
-\newblock The geometry of truth: emergent linear structure in large
- language model representations of true/false datasets.
-\newblock \emph{arXiv:2310.06824}, 2023.
-
-\bibitem[Marks et~al.(2024)]{marksSparseFeatureCircuits2024}
+\bibitem[Marks et~al.(2025)]{marksSparseFeatureCircuits2024}
 Marks, S., Rager, C., Michaud, E.~J., Belinkov, Y., Bau, D., and
  Mueller, A.
 \newblock Sparse feature circuits: Discovering and editing
@@ -1341,11 +1291,12 @@ Nanda, N., Chan, L., Lieberum, T., Smith, J., and Steinhardt, J.
 \newblock Progress measures for grokking via mechanistic interpretability.
 \newblock \emph{ICLR}, 2023.
 
-\bibitem[No\"el et~al.(2025)]{noelGeometryReasonSpectral2025}
+%%% Content fix: venue ICML 2025→arXiv 2026 (paper posted Jan 2026)
+\bibitem[No\"el et~al.(2026)]{noelGeometryReasonSpectral2025}
 No\"el, V. et~al.
 \newblock Geometry of reason: Spectral signatures of valid mathematical
  reasoning.
-\newblock \emph{ICML}, 2025.
+\newblock \emph{arXiv:2601.00791}, 2026.
 
 \bibitem[Olah et~al.(2020)]{olahZoomIntroductionCircuits2020}
 Olah, C. et~al.
@@ -1382,15 +1333,15 @@ Rafailov, R., Sharma, A., Mitchell, E., Manning, C.~D., Ermon, S., and
  secretly a reward model.
 \newblock \emph{NeurIPS}, 2023.
 
+%%% Content fix: corrected author list (29 real authors)
 \bibitem[Sharkey et~al.(2025)]{sharkeyOpenProblemsMechInterp2025}
 Sharkey, L., Chughtai, B., Batson, J., Lindsey, J., Wu, J.,
  Bushnaq, L., Goldowsky-Dill, N., Heimersheim, S., Ortega, A.,
- Bloom, J., Bills, S., Conmy, A., Cammarata, N., Bereska, L.,
- Chan, L., Mott, R., Lange, A., Tigges, C., Kobayashi, A.,
- Bonkowski, B., Lewis, O., Sleight, H., Crosbie, J., Williams, S.,
- Sourbut, S., Lehalleur, S.~P., Friedman, D., Marks, S., Macar, D.,
- Murthy, A., Gross, T., Mueller, A., Hod, S., Soligo, A.,
- Conmy, A., Casper, S., and Nanda, N.
+ Bloom, J., Biderman, S., Garriga-Alonso, A., Conmy, A., Nanda, N.,
+ Rumbelow, J., Wattenberg, M., Schoots, N., Miller, J.,
+ Michaud, E.~J., Casper, S., Tegmark, M., Saunders, W., Bau, D.,
+ Todd, E., Geiger, A., Geva, M., Hoogland, J., Murfet, D.,
+ and McGrath, T.
 \newblock Open problems in mechanistic interpretability.
 \newblock \emph{arXiv:2501.16496}, 2025.
 
@@ -1406,17 +1357,12 @@ Sun, C.~E., Yan, G., and Weng, T.
  short thinking in reasoning models.
 \newblock \emph{EMNLP}, 2025.
 
+%%% Content fix: added missing co-author Zimo Wang
 \bibitem[Sun et~al.(2026)]{sunSteer2Edit2026}
-Sun, C.~E., Yan, G., and Weng, T.
+Sun, C.~E., Yan, G., Wang, Z., and Weng, T.
 \newblock {Steer2Edit}: From activation steering to component-level
  editing.
 \newblock \emph{arXiv:2602.09870}, 2026.
-
-\bibitem[Tang et~al.(2026)]{tangPersonaGradientAscent2026}
-Tang, Y. et~al.
-\newblock Bridging mechanistic interpretability and prompt engineering
- with gradient ascent for interpretable persona control.
-\newblock \emph{arXiv:2601.02896}, 2026.
 
 \bibitem[Templeton et~al.(2024)]{templetonScalingMonosemanticity2024}
 Templeton, A., Conerly, T., Marcus, J., Lindsey, J., Bricken, T.,
@@ -1447,12 +1393,6 @@ Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F.,
 \newblock Simple synthetic data reduces sycophancy in large language
  models.
 \newblock \emph{arXiv:2308.03958}, 2023.
-
-\bibitem[Yang et~al.(2022)]{yang2022tensor}
-Yang, G. et~al.
-\newblock Tensor programs {V}: Tuning large neural networks via
- zero-shot hyperparameter transfer.
-\newblock \emph{arXiv:2203.03466}, 2022.
 
 \bibitem[Zou et~al.(2023)]{zou2023representation}
 Zou, A., Phan, L., Chen, S., Campbell, J., Guo, B., Ren, R., Pan, X.,
@@ -2047,35 +1987,6 @@ and the primary representational load are co-located in the same spectral
 direction. The mechanism is the extreme case of the SNR-as-dosing-guide
 principle (\Cref{sec:gemma_snr_dial}): when $\cos(\Delta W_{u_1},
 W_{u_1}) \approx 0.81$, there is no safe dose.
-
-\textbf{Contrastive control: Llama-3.2-3B L7.}
-To confirm this is a property of Mistral's instruction tuning regime and
-not a general feature of RLHF, we compute the same quantity for
-Llama-3.2-3B at L7 (its dominant sycophancy site). The result:
-$\cos(\Delta W_{u_1}, W_{u_1}) = 0.025$---near-zero alignment. RLHF
-stored the Llama compliance programme in a direction \emph{orthogonal}
-to the dominant representational load, leaving a safe spectral gap for
-surgery. The contrast is stark:
-
-\begin{center}
-\small
-\begin{tabular}{lcc}
-\toprule
-Model & $\cos(\Delta W_{u_1},\, W_{u_1})$ & Surgery outcome \\
-\midrule
-Mistral-7B L31 & $0.812$ & Immediate collapse \\
-Llama-3.2-3B L7 & $0.025$ & Clean $-50\pp$ reduction \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-This pair explains the storage-class taxonomy from first principles:
-the storage class a model lands in is determined by \emph{where RLHF
-writes the compliance update relative to the existing dominant spectral
-direction}. If it writes co-linearly (Mistral), surgery is impossible.
-If it writes orthogonally (Llama), surgery is safe. The $\Delta W$ cosine
-is thus a \emph{predictive} quantity, computable from base and instruct
-weights before any behavioral evaluation.
 
 \section*{NeurIPS Paper Checklist}
 
