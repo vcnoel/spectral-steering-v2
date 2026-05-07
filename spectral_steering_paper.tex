@@ -930,7 +930,7 @@ Per layer SNR provides a dosing guide. In separable models, low SNR sites ($\snr
 
 Unlike the Llama, Gemma, Phi, and Qwen models, Mistral-7B-Instruct-v0.3 resists single-layer spectral surgery. Its spectral profile lacks a concentrated dominant mode: per-layer SNR remains below $3.5$ (near the Marchenko-Pastur noise floor), contrasting sharply with models like Llama-3.1-8B ($\snr{=}5.25$) or Qwen2.5-3B ($\snr{=}6.32$ at its L6 operating site). 
 
-Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut.
+Consequently, Mistral exhibits near-ceiling baseline sycophancy ($98.5\%$) that cannot be surgically removed without catastrophic capability damage. Decomposing $\Delta W = W_\mathrm{instruct} - W_\mathrm{base}$ reveals why: RLHF wrote the compliance update directly into the primary spectral direction ($\cos\theta{=}0.812$ at L31). Because the signal is co-located with core capabilities, there is no safe mode to cut. By contrast, in Llama-3.2-3B L7, $\cos\theta{=}0.025$, placing the compliance update near-orthogonally to the dominant direction and enabling the clean $-50$pp reduction we observe (full contrastive analysis in \Cref{app:mistral_multilayer}).
 
 This establishes a taxonomy recoverable entirely from the SVD profile of $W_\mathrm{down}$, serving as a \emph{black-box audit primitive} that predicts intervention success without behavioural testing:
 
