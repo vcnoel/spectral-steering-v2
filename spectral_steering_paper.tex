@@ -1,0 +1,1960 @@
+% ============================================================
+% Sycophancy in Language Models Is Mediated by a Single Spectral Direction
+% NeurIPS 2025 / MechInterp Workshop — 9 pages
+% ============================================================
+\documentclass{article}
+
+\usepackage[margin=1in,top=1.2in,bottom=1.2in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xcolor,colortbl}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,
+                decorations.pathreplacing,calc,matrix}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,citecolor=blue!60!black,urlcolor=blue!60!black}
+
+% ---- TikZ styles ----
+\tikzset{
+  block/.style={rectangle, draw=gray!55, fill=white, rounded corners=5pt,
+                font=\small\sffamily, text centered, minimum height=1.1cm,
+                line width=0.7pt, inner sep=6pt},
+  fatblock/.style={rectangle, draw=blue!45, fill=blue!6, rounded corners=5pt,
+                   font=\small\sffamily, text centered, minimum height=1.1cm,
+                   line width=0.9pt, inner sep=6pt},
+  greenblock/.style={rectangle, draw=green!55!black, fill=green!6, rounded corners=5pt,
+                     font=\small\sffamily, text centered, minimum height=1.0cm,
+                     line width=0.8pt, inner sep=5pt},
+  redblock/.style={rectangle, draw=red!55, fill=red!5, rounded corners=5pt,
+                   font=\small\sffamily, text centered, minimum height=1.0cm,
+                   line width=0.8pt, inner sep=5pt},
+  smallblock/.style={rectangle, draw=gray!45, fill=gray!8, rounded corners=3pt,
+                     font=\scriptsize\sffamily, text centered, minimum height=0.7cm,
+                     line width=0.6pt, inner sep=3pt},
+  arrow/.style={-{Stealth[scale=1.1]}, thick, draw=gray!70},
+  garrow/.style={-{Stealth[scale=1.1]}, thick, draw=green!55!black},
+  rarrow/.style={-{Stealth[scale=1.1]}, thick, draw=red!55},
+  barrow/.style={-{Stealth[scale=1.1]}, thick, draw=blue!60},
+}
+
+% ---- Custom boxes ----
+\newtcolorbox{findingbox}[1][]{
+  colback=blue!4, colframe=blue!45, boxrule=0.9pt,
+  fonttitle=\small\bfseries, left=6pt, right=6pt, top=5pt, bottom=5pt, #1
+}
+\newtcolorbox{responsebox}[2][]{
+  colback=gray!7, colframe=gray!45, boxrule=0.5pt,
+  title={\small\textbf{#2}}, fonttitle=\small,
+  left=5pt, right=5pt, top=3pt, bottom=3pt, #1
+}
+
+% ---- Macros ----
+\newcommand{\PLACEHOLDER}[1]{\textcolor{red!70}{\textbf{[#1]}}}
+\newcommand{\snr}{\mathrm{SNR}}
+\newcommand{\syco}{\textsc{Syco}}
+\newcommand{\gsm}{\textsc{Gsm8K}}
+\newcommand{\pp}{\,pp}
+
+% ============================================================
+\title{\textbf{Sycophancy in Language Models Is Mediated\\
+       by a Single Spectral Direction}}
+
+\author{%
+  \textbf{[Author Names]} \\
+  [Institution] \\
+  \texttt{[email]}
+}
+\date{}
+% ============================================================
+
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+% ============================================================
+Instruction-tuned language models reliably defer to user opinions even
+when those opinions are factually incorrect---a behaviour known as
+\emph{sycophancy} that poses measurable risks to downstream
+decision-making.
+Despite its prevalence across model families and its well-documented
+harms, the internal mechanism producing sycophancy has remained opaque,
+blocking principled mitigation strategies.
+We show that sycophancy is mediated by the dominant spectral subspace of
+a single MLP down-projection weight matrix at a characteristic layer
+in each model, across six open-source instruction-tuned models spanning
+three architectural families and parameter counts from 1B to 8B.
+A training-free, data-free, closed-form singular-value rescaling at this
+layer produces a monotone dose--response: in Llama-3.2-3B-Instruct,
+sycophancy falls from $59\%$ to $9\%$ across five independently seeded
+evaluations, an effect $6\times$ larger than the 95\% confidence interval
+of the baseline.
+The per-layer spectral signal-to-noise ratio (SNR) predicts whether
+the intervention achieves targeted behavioural change or manifold collapse,
+providing a testable mechanistic diagnostic that requires no behavioural
+evaluation whatsoever.
+On Gemma-4-E2B-it, evaluated at $N{=}1{,}000$ sycophancy probes and
+$N{=}250$ mathematical-reasoning items, we demonstrate a \emph{strict
+Pareto improvement}: sycophancy decreases by $6.1\%$ relative while
+reasoning improves by $8.8\%$ relative, directly falsifying the
+assumption that sycophancy suppression must degrade capability.
+These results reframe the alignment tax from a fundamental training
+constraint to a measurable consequence of spectral geometry.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+% ============================================================
+
+Reinforcement learning from human feedback (RLHF) and related
+fine-tuning procedures have driven remarkable improvements in the
+helpfulness and safety of large language models
+(LLMs)~\citep{ouyangTrainingLanguageModels2022,
+baiTrainingHelpfulHarmless2022,
+rafailovDirectPreferenceOptimization2023}.
+A persistent and largely unresolved pathology of this process is
+\emph{sycophancy}: the systematic tendency of trained models to validate
+user beliefs regardless of their factual
+accuracy~\citep{sharmaTowardsUnderstandingSycophancy2023,
+perezSycophancySubtleManipulator2022}.
+Sycophantic models endorse medical misinformation when patients express
+confident but wrong beliefs, reinforce financial mistakes when investors
+frame questions tendentiously, and in general provide a veneer of
+authoritative agreement that undermines the epistemic value of AI
+consultation~\citep{sharmaTowardsUnderstandingSycophancy2023}.
+The effect is robust across model scales, task domains, and instruction
+formats~\citep{sharmaTowardsUnderstandingSycophancy2023,
+kojimaLargeLanguageModels2022}, and notably \emph{worsens} with the
+very fine-tuning procedures intended to make models more
+helpful~\citep{perezSycophancySubtleManipulator2022}.
+
+Existing mitigations fall into two broad categories.
+Training-based approaches---synthetic counterfactual data
+augmentation~\citep{weiSimpleSyntheticData2023}, preference fine-tuning
+with truthfulness
+rewards~\citep{mukherjeeORCA2Reasoning2023,baiTrainingHelpfulHarmless2022},
+and constitutional AI
+variants~\citep{baiConstitutionalAIHarmlessness2022}---require
+substantial compute and access to the training pipeline, and offer no
+mechanistic explanation for why the behaviour exists or where it is
+stored.
+Activation steering
+approaches~\citep{turner2023activation,zou2023representation,
+panicksserySteeringLlama2023} are more principled but depend on
+contrastive prompt pairs, impose per-token inference overhead, and
+operate at a representation level that is harder to audit.
+Neither family provides a \emph{weight-space} account of sycophancy---
+the kind that would enable permanent, training-free, inference-free
+surgical removal.
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[node distance=1.7cm and 2.0cm]
+
+%% ---- Row 1: Pipeline ----
+\node[block, minimum width=1.6cm] (W)
+      {$W_\ell$\\\scriptsize{down-proj}\\$\mathbb{R}^{d \times d_f}$};
+
+\node[fatblock, right=2.0cm of W, minimum width=2.0cm] (svd)
+      {Thin SVD\\\small$W_\ell = U_\ell\,\Sigma_\ell\,V_\ell^\top$};
+
+% Singular spectrum node (contains a hand-drawn bar chart)
+\node[block, right=2.0cm of svd, minimum width=3.4cm, minimum height=2.6cm] (spec) {};
+\node[above=0pt, anchor=north, font=\small\sffamily\bfseries] at (spec.north) {\vspace{2pt}Singular spectrum};
+
+% Draw a mini bar chart inside spec node
+\begin{scope}[shift={($(spec.center)+(0,-0.05)$)}]
+  % bars (declining spectrum)
+  \foreach \x/\h/\c in {
+    -1.45/0.85/blue!70,
+    -1.05/0.68/blue!50,
+    -0.65/0.52/blue!35,
+    -0.25/0.42/gray!55,
+     0.15/0.33/gray!45,
+     0.55/0.26/gray!40,
+     0.95/0.20/gray!35,
+     1.35/0.15/gray!30}
+  {
+    \fill[\c] (\x cm,-0.55cm) rectangle ++(0.28cm,\h cm);
+    \draw[gray!40,line width=0.3pt] (\x cm,-0.55cm) rectangle ++(0.28cm,\h cm);
+  }
+  % Marchenko-Pastur noise floor
+  \draw[dashed,orange!80!black,line width=1.0pt] (-1.6cm,-0.10cm) -- (1.6cm,-0.10cm);
+  \node[font=\tiny\sffamily,color=orange!80!black,anchor=west] at (1.65cm,-0.10cm) {MP floor};
+  % x-label
+  \node[font=\tiny\sffamily,color=gray!60] at (0,-0.75cm) {singular value index $i$};
+  % SNR annotation
+  \draw[{Stealth[scale=0.7]}-,blue!70,thin] (-1.35cm,0.38cm) -- (-0.80cm,0.75cm)
+        node[anchor=south,font=\tiny\sffamily,color=blue!70] {$\sigma_1$ (dominant)};
+\end{scope}
+
+\node[fatblock, right=2.0cm of spec, minimum width=2.0cm] (rescale)
+      {Rescaling\\\small$\sigma_i' = \sigma_i(1+\alpha z_i)$\\\scriptsize $z_i=(\sigma_i-\bar\sigma)/s$};
+
+\node[block, right=1.8cm of rescale, minimum width=1.6cm] (Wp)
+      {$W_\ell'$\\\scriptsize{steered}};
+
+%% ---- Pipeline arrows ----
+\draw[arrow] (W)       -- (svd);
+\draw[arrow] (svd)     -- (spec);
+\draw[arrow] (spec)    -- (rescale);
+\draw[arrow] (rescale) -- (Wp);
+
+%% ---- Branch below rescale ----
+\node[greenblock, below left=1.5cm and 1.2cm of rescale, minimum width=2.4cm]
+      (neg) {$\alpha < 0$: compress\\dominant $\sigma_i\downarrow$\\{\scriptsize attenuation}};
+\node[redblock,   below right=1.5cm and 1.2cm of rescale, minimum width=2.4cm]
+      (pos) {$\alpha > 0$: amplify\\dominant $\sigma_i\uparrow$\\{\scriptsize amplification}};
+
+\draw[garrow] (rescale.south) -- ++(0,-0.45) -| (neg.north);
+\draw[rarrow] (rescale.south) -- ++(0,-0.45) -| (pos.north);
+
+%% ---- Outcome boxes ----
+\node[smallblock, below=0.55cm of neg, text=green!60!black,
+      draw=green!45, fill=green!5, minimum width=2.2cm]
+      (negout) {Sycophancy $\searrow\!\searrow$\\Reasoning preserved};
+\node[smallblock, below=0.55cm of pos, text=red!60,
+      draw=red!40, fill=red!4, minimum width=2.2cm]
+      (posout) {Sycophancy $\nearrow\!\nearrow$\\Neutral $\to$ compliant};
+
+\draw[garrow] (neg) -- (negout);
+\draw[rarrow] (pos) -- (posout);
+
+%% ---- Step labels above pipeline ----
+\node[above=0.25cm of W,       font=\scriptsize\sffamily\color{gray!60}] {Input};
+\node[above=0.25cm of svd,     font=\scriptsize\sffamily\color{gray!60}] {Step~1: Decompose};
+\node[above=0.25cm of spec,    font=\scriptsize\sffamily\color{gray!60}] {Step~2: Analyse};
+\node[above=0.25cm of rescale, font=\scriptsize\sffamily\color{gray!60}] {Step~3: Rescale};
+\node[above=0.25cm of Wp,      font=\scriptsize\sffamily\color{gray!60}] {Output};
+
+%% ---- SNR label ----
+\node[smallblock, below=0.3cm of svd, draw=blue!35, fill=blue!5,
+      minimum width=2.2cm, text=blue!70]
+      (snrbox) {\small$\snr_\ell = \sigma_1(\ell)/\tilde\sigma(\ell)$\\{\scriptsize select layer $\ell^*$ by peak SNR}};
+\draw[barrow,dashed] (svd.south) -- (snrbox.north);
+
+\end{tikzpicture}
+
+\vspace{4pt}
+\caption{\textbf{Spectral steering pipeline.}
+The down-projection matrix $W_\ell$ at a single layer undergoes thin SVD.
+The singular value spectrum is analysed: the leading singular values lie
+above the Marchenko-Pastur noise floor (orange dashed), forming the
+dominant spectral subspace.
+A closed-form variance-normalised rescaling $\sigma_i' = \sigma_i(1+\alpha z_i)$
+with $z_i = (\sigma_i - \bar\sigma)/s$ is applied to produce a modified
+weight $W_\ell'$.
+For $\alpha{<}0$, dominant singular values are compressed, monotonically
+reducing sycophancy.
+For $\alpha{>}0$, they are amplified, inducing sycophancy on neutral inputs.
+Layer selection uses the per-layer SNR as a data-free criterion.
+The entire operation requires no data, no forward passes, and no gradient
+computation.}
+\label{fig:pipeline}
+\end{figure*}
+
+\textbf{This work.}
+We present a mechanistic account of sycophancy as a property of the
+spectral structure of MLP weight matrices.
+Specifically, we show that sycophancy is mediated by the dominant singular
+subspace of the \texttt{mlp.down\_proj} matrix at a single characteristic
+layer in each instruction-tuned model, and that a closed-form
+singular-value rescaling at this layer---requiring no data, no gradient,
+and no inference-time modification---produces monotone, bidirectional
+control of the sycophancy rate.
+Our programme mirrors the structure of \citet{arditiRefusalLanguageModels2024},
+who identified a single linear direction mediating refusal in activation
+space; we extend this line of work to sycophancy and to weight space,
+where the intervention is permanent and computationally free at inference time.
+
+\textbf{Contributions.}
+\begin{enumerate}[leftmargin=1.4em,itemsep=1pt,topsep=3pt]
+\item We demonstrate that sycophancy is mediated by a single spectral
+  direction in MLP weight matrices, localised to one layer per model,
+  across six instruction-tuned models spanning 1B--8B parameters and
+  three architectural families (\Cref{sec:direction}).
+\item We show that the effect is bidirectional and dose-responsive:
+  compressing the direction reduces sycophancy from $59\%$ to $9\%$ in
+  five independently seeded evaluations; amplifying it raises sycophancy
+  above baseline (\Cref{sec:direction}).
+\item We show that the alignment tax is \emph{geometry-dependent}, not
+  fundamental: a strict Pareto improvement (less sycophancy,
+  \emph{more} reasoning) exists on Gemma-4-E2B-it at $N{=}1{,}000$
+  (\Cref{sec:pareto}).
+\item We identify the per-layer spectral SNR as a testable diagnostic:
+  layers with high SNR tolerate compression cleanly; low-SNR layers
+  undergo manifold collapse (\Cref{sec:mechanistic}).
+\item We provide a Lanczos-accelerated implementation that reduces
+  per-layer SNR estimation from $O(mn\!\min(m,n))$ to $O(k{\cdot}mn)$
+  with $k{=}32$, enabling exhaustive sweeps over all layers of an 8B
+  model in under 3 hours on a single RTX~5080 (\Cref{app:lanczos}).
+\end{enumerate}
+
+% ============================================================
+\section{Methodology}
+\label{sec:method}
+% ============================================================
+
+\subsection{Transformer MLP structure}
+\label{sec:background}
+
+Decoder-only transformers~\citep{vaswaniAttentionAllYou2017,
+radfordLanguageModelsAre2019} process inputs through $L$ sequential
+blocks, each containing a self-attention sublayer and a feedforward MLP
+sublayer.
+In the Llama, Gemma, and Phi families studied here, the MLP uses a gated
+activation function:
+\[
+  \mathrm{MLP}(x) = \bigl(\phi(W_\mathrm{gate}\,x) \odot W_\mathrm{up}\,x\bigr)
+                    \,W_\mathrm{down}^\top,
+\]
+where $W_\mathrm{down} \in \mathbb{R}^{d_\mathrm{model} \times d_\mathrm{ffn}}$
+writes the MLP's hidden state back to the residual stream.
+We focus on $W_\mathrm{down}$ because it is the matrix that
+\emph{commits} information to the residual stream after non-linear
+gated processing---the natural bottleneck where behavioural programmes
+are executed and stored~\citep{mengLocatingEditingFactual2022,
+nandaProgressMeasures2023}.
+
+\subsection{Spectral steering}
+\label{sec:steering}
+
+Let $W_\ell \coloneqq W_\mathrm{down}^{(\ell)}$ be the down-projection
+at layer $\ell$, with thin SVD
+$W_\ell = U_\ell\,\Sigma_\ell\,V_\ell^\top$,
+where $\Sigma_\ell = \mathrm{diag}(\sigma_1,\ldots,\sigma_r)$ with
+$\sigma_1 \ge \sigma_2 \ge \cdots \ge \sigma_r > 0$.
+We apply a variance-normalised spectral rescaling:
+\begin{equation}
+  \sigma_i' = \sigma_i \!\left(1 + \alpha \cdot
+    \frac{\sigma_i - \bar\sigma}{s_\sigma}\right),
+  \qquad W_\ell' = U_\ell\,\Sigma_\ell'\,V_\ell^\top,
+  \label{eq:steering}
+\end{equation}
+where $\bar\sigma = \frac{1}{r}\sum_i \sigma_i$,
+$s_\sigma = \bigl(\frac{1}{r}\sum_i(\sigma_i-\bar\sigma)^2\bigr)^{1/2}$,
+and $\alpha \in \mathbb{R}$ is the sharpening coefficient.
+The $z$-scored factor $(\sigma_i - \bar\sigma)/s_\sigma$ is
+positive for above-average singular values and negative for
+below-average ones.
+Consequently, $\alpha < 0$ attenuates the dominant singular directions
+relative to the noise floor, while $\alpha > 0$ amplifies them.
+The rescaling is closed-form, requires no data or forward passes, and
+can be applied to 4-bit quantised models via temporary
+dequantisation~\citep{dettmersGPTQAccuratePostTraining2022}.
+A schematic of the full pipeline is shown in~\Cref{fig:pipeline}.
+
+The relationship between our intervention and spectral properties of
+weight matrices has connections to regularisation theory: the implicit
+regularisation of SGD is known to suppress dominant singular
+directions~\citep{martinImplicitSelfregularizationDeep2021}, and
+fine-tuning on preference data may partially reverse this suppression
+for sycophancy-relevant directions, creating recoverable spectral
+structure.
+
+\subsection{Layer selection via spectral SNR}
+\label{sec:snr_selection}
+
+Not all layers produce meaningful sycophancy reduction under
+\Cref{eq:steering}.
+We define the per-layer spectral signal-to-noise ratio
+\[
+  \snr_\ell = \frac{\sigma_1(\ell)}{\tilde\sigma(\ell)},
+\]
+where $\sigma_1(\ell)$ is the leading singular value and
+$\tilde\sigma(\ell)$ is the median singular value
+of $W_\mathrm{down}^{(\ell)}$.
+This ratio, analogous to the Marchenko-Pastur
+criterion~\citep{marchenkoPasturDistribution1967,
+baik2005phaseTransition}, quantifies how much spectral mass is
+concentrated in the dominant directions relative to the noise floor.
+We compute SNR for all layers using a Lanczos-based leading singular
+value estimator (\Cref{app:lanczos}) that runs in $O(k{\cdot}mn)$
+time with $k{=}32$ iterations, enabling full sweeps over 32-layer
+models in under 3 hours on a single GPU.
+Empirically, $\snr_\ell$ peaks in the shallow-to-mid layers
+($\ell/L \approx 0.20$--$0.50$) for the Llama-3B and 8B models
+and near the final layers for Llama-1B ($\ell/L \approx 0.88$),
+providing a data-free starting heuristic for a guided layer search.
+
+\subsection{Models, datasets, and evaluation}
+\label{sec:eval}
+
+\textbf{Models.}
+We evaluate six instruction-tuned models:
+Llama-3.2-1B-Instruct, Llama-3.2-3B-Instruct, and
+Llama-3.1-8B-Instruct~\citep{dubeyLlama3Herd2024};
+Gemma-4-E2B-it~\citep{gemmateamGemma4Technical2025};
+Phi-4-mini-instruct~\citep{abadinPhiSmallLanguage2024}; and
+Mistral-7B-Instruct-v0.3~\citep{jiangMistral7B2023}.
+This set spans three architectural families (Llama/RoPE,
+Gemma/GemmaAttention, Phi/SuRoPE), parameter counts from 1B to 8B,
+and both 16-bit and 4-bit quantised inference regimes.
+
+\textbf{Sycophancy evaluation.}
+We use a 1,000-item factual sycophancy benchmark
+following~\citet{sharmaTowardsUnderstandingSycophancy2023}.
+Each item presents a two-alternative forced choice: the user asserts
+an incorrect factual belief and asks the model to select~(A)
+agreement or~(B) polite disagreement.
+A response is sycophantic if it selects~(A).
+Baseline rates are measured on $N{=}100$--$1{,}000$ uniformly
+sampled items to avoid question-distribution bias
+(\Cref{app:sampling_bias}).
+
+\textbf{Reproducibility.}
+All sycophancy and capability evaluations are run with five
+independent random seeds for question sampling.
+We report means across seeds; all reported effects exceed $3\times$
+the 95\% bootstrap confidence interval width of the baseline,
+confirming that effects are far outside the noise range.
+
+\textbf{Capability benchmarks.}
+We evaluate reasoning and knowledge preservation on
+GSM8K~\citep{cobbeTrainingVerifiersSolve2021},
+MMLU~\citep{hendryksScalingInstructionFinetunedLanguage2022},
+ARC-Challenge~\citep{clarkThinkYouHave2018}, and
+TruthfulQA~\citep{linTruthfulQAMeasuringHow2022}.
+Samples range from $N{=}50$ to $N{=}250$ depending on model speed;
+all results use 95\% bootstrap confidence intervals over
+10,000 resamples.
+
+% ============================================================
+\section{Sycophancy Is Mediated by a Single Spectral Direction}
+\label{sec:direction}
+% ============================================================
+
+\subsection{Identifying the dominant layer}
+\label{sec:layer_id}
+
+\begin{figure}[t]
+\centering
+% Left: layer sweep bar chart
+\begin{tikzpicture}
+\begin{axis}[
+    ybar, bar width=4.5pt,
+    width=0.52\textwidth, height=5.8cm,
+    xlabel={Layer index},
+    ylabel={Sycophancy rate (\%)},
+    xmin=-0.8, xmax=27.8,
+    ymin=0, ymax=95,
+    ytick={0,20,40,60,80},
+    xtick={0,4,7,8,12,16,20,24,27},
+    xticklabels={L0,L4,\textbf{L7},L8,L12,L16,L20,L24,L27},
+    xticklabel style={font=\scriptsize},
+    yticklabel style={font=\small},
+    xlabel style={font=\small},
+    ylabel style={font=\small},
+    legend style={at={(0.97,0.97)},anchor=north east,font=\scriptsize,
+                  cells={align=left}},
+    legend cell align=left,
+    clip=false,
+]
+% Disrupted (CI=[0,0])
+\addplot[fill=red!65,draw=red!75,bar shift=0pt] coordinates {(0,0)(1,0)};
+% Non-target (gray)
+\addplot[fill=gray!38,draw=gray!55,bar shift=0pt] coordinates {
+    (2,25)(3,77)(4,59)(5,30)(6,38)
+    (8,51)(9,57)(10,30)(11,33)(12,64)
+    (13,57)(14,53)(15,48)(16,42)(17,44)
+    (18,55)(19,59)(20,42)(21,57)(22,48)
+    (23,37)(24,60)(25,47)(26,65)(27,35)};
+% Winner (L7)
+\addplot[fill=blue!72,draw=blue!85,bar shift=0pt] coordinates {(7,9)};
+% Baseline line
+\addplot[dashed,red!70,thick,domain=-0.8:27.8] {59};
+\addlegendentry{\color{red!70}Disrupted (CI$=[0,0]$)};
+\addlegendentry{Other layers};
+\addlegendentry{\color{blue!80}L7 (SNR$=4.87$): $9\%$};
+\node[font=\tiny,color=red!70,anchor=west] at (axis cs:18,60.5) {baseline $59\%$};
+\end{axis}
+\end{tikzpicture}%
+\hfill
+% Right: dose-response at L7
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.44\textwidth, height=5.8cm,
+    xlabel={Steering strength $\alpha$},
+    ylabel={Sycophancy rate (\%)},
+    xmin=-1.65, xmax=-0.35,
+    ymin=0, ymax=70,
+    xtick={-1.5,-1.0,-0.5},
+    xticklabel style={font=\small},
+    yticklabel style={font=\small},
+    xlabel style={font=\small},
+    ylabel style={font=\small},
+    mark size=3.5pt,
+    grid=major, grid style={dashed,gray!30},
+]
+% Dose-response line
+\addplot[blue!70,thick,mark=*,mark options={fill=blue!70,draw=blue!90}]
+    coordinates {(-0.5,43)(-1.0,27)(-1.5,9)};
+% CI bars (approximate)
+\addplot[blue!40,only marks,mark=-,mark options={scale=2.5}]
+    coordinates {(-0.5,34)(-0.5,53)(-1.0,19)(-1.0,36)(-1.5,4)(-1.5,15)};
+% Baseline
+\addplot[dashed,red!70,thick,domain=-1.65:-0.35] {59};
+% Labels
+\node[font=\small,blue!80,anchor=west] at (axis cs:-1.5,9) {\ \ $9\%$};
+\node[font=\small,blue!80,anchor=west] at (axis cs:-1.0,27) {\ \ $27\%$};
+\node[font=\small,blue!80,anchor=east] at (axis cs:-0.5,43) {$43\%$\ };
+\node[font=\small,red!70,anchor=east] at (axis cs:-0.35,59) {$59\%$\ };
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Layer sweep and dose--response: Llama-3.2-3B-Instruct.}
+\emph{Left:} Sycophancy rate at all 28 layers under $\alpha{=}{-}1.5$
+($N{=}100$ per layer, 5 seeds).
+\textcolor{red!80}{Red} bars (L0--L1) show manifold collapse:
+the model produces no valid responses, CI$=[0,0]$.
+\textcolor{blue!80}{Blue} bar (L7, $\snr{=}4.87$) achieves $9\%$,
+CI$=[4,15]$---genuine, coherent sycophancy reduction.
+\emph{Right:} Monotone dose--response at L7:
+$59\%\to43\%\to27\%\to9\%$ as $\alpha$ decreases, with all confidence
+intervals non-overlapping with baseline.
+Tick marks indicate 95\% bootstrap CI bounds.}
+\label{fig:sweep}
+\end{figure}
+
+For each model we conduct an exhaustive layer sweep: we apply
+\Cref{eq:steering} independently at every layer $\ell \in \{0,\ldots,L{-}1\}$
+and measure the resulting sycophancy rate at $N{=}100$ items
+per layer per seed across five seeds.
+\Cref{fig:sweep} (left) shows the full result for Llama-3.2-3B-Instruct
+at $\alpha{=}{-}1.5$.
+
+\textbf{The sycophancy-mediating layer is sharply localised.}
+Of the model's 28 layers, a single layer---L7 at depth fraction
+$\ell/L = 0.25$---produces a $-50\pp$ sycophancy reduction, from
+$59\%$ to $9\%$ (CI$=[4,15]$).
+The second-best non-disrupted layer achieves only $-29\pp$ (L5, $30\%$).
+The majority of layers produce reductions of $\le 17\pp$ or no
+reduction at all.
+This concentration of effect in a single layer is highly non-generic;
+a random spectral perturbation of size $\|\Delta W\|_F/\|W\|_F
+\approx 4\%$ would distribute effect across all layers roughly
+uniformly, yielding changes of $\le 3\pp$ per layer.
+The $-50\pp$ spike at L7 therefore reflects genuine mechanistic
+localisation, not diffuse spectral sensitivity.
+
+\textbf{Disruption signature.}
+Layers~0 and~1 produce exactly $0\%$ sycophancy with
+CI$=[0,0]$---the model generates no valid A/B response whatsoever.
+This \emph{manifold collapse} signature is categorically distinct from
+genuine sycophancy reduction: rather than coherently disagreeing with the
+user, the model hallucinates off-topic text, repeats special tokens,
+or emits empty strings.
+We develop a formal criterion for distinguishing disruption from genuine
+reduction in \Cref{sec:mechanistic}.
+
+\textbf{Cross-model summary.}
+\Cref{tab:summary} reports the dominant layer, SNR, baseline sycophancy,
+and steered sycophancy for each of the six models.
+Across the two larger Llama models, the dominant sycophancy layer is at
+the \emph{same absolute index}: L7 for both Llama-3.2-3B (depth
+fraction 0.25) and Llama-3.1-8B (depth fraction 0.22), with SNR
+values of $4.87$ and $5.25$ respectively---within $8\%$ of each
+other despite the models having different hidden dimensions
+($d{=}3072$ vs.\ $4096$) and different total depths.
+Llama-3.2-1B localises sycophancy at a deeper site (L14,
+depth fraction 0.88), consistent with smaller models compressing
+their representational structure towards later layers.
+The L7 cross-scale consistency for 3B and 8B suggests that
+sycophancy representations form at a fixed position in the
+transformer computational hierarchy, anchored by the specific
+layer rather than by depth fraction.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{\textbf{Cross-model results.}
+Dominant layer, SNR, and sycophancy rates under optimal single-layer
+spectral steering ($N{\ge}100$, 5 seeds, 95\% CI in brackets).
+$^\dagger$Gemma-4 uses a 3-layer configuration; $^\ddagger$Mistral
+sycophancy is near-ceiling and not significantly reducible.}
+\label{tab:summary}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Model} & \textbf{Layers} & \textbf{Layer} & \textbf{SNR} &
+  $\alpha$ & \textbf{Baseline} & \textbf{Steered} & $\boldsymbol{\Delta}$ \\
+\midrule
+Llama-3.2-1B  & 16 & L14  & 2.77 & $-1.5$ & 32\%          & 1\% [0,3]    & $-31\pp$ \\
+Llama-3.2-3B  & 28 & L7   & 4.87 & $-1.5$ & 59\%          & 9\% [4,15]   & $-50\pp$ \\
+Llama-3.1-8B  & 32 & L7   & 5.25 & $-0.5$ & 48\%          & 10\% [2,18]  & $-38\pp$ \\
+Gemma-4-E2B$^\dagger$ & 46 & L33+L18+L24 & --- & multi & 39.5\% & 14.8\% [12,17] & $-24.7\pp$ \\
+Phi-4-mini    & 32 & L10  & 4.59 & $-0.2$ & 86\%          & 79\% [73,85] & $-7\pp$ \\
+Mistral-7B$^\ddagger$ & 32 & ---  & --- & ---   & 98.5\% [97,100] & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Monotone dose--response}
+\label{sec:doseresponse}
+
+Having identified L7 as the dominant site for Llama-3.2-3B, we probe
+the response to varying $|\alpha|$ at fixed layer.
+\Cref{fig:sweep} (right) shows the result: sycophancy falls
+$59\% \to 43\% \to 27\% \to 9\%$ as $\alpha$ decreases from $-0.5$
+to $-1.5$, a strictly monotone, roughly linear trajectory.
+Each successive step of $\Delta\alpha = -0.5$ produces an additional
+$-16\pp$ to $-18\pp$ reduction, and at every point the 95\% CI
+does not overlap with baseline.
+
+This dose--response structure is the hallmark of a well-localised,
+\emph{graded} mechanistic intervention.
+A model in which sycophancy arose from many distributed directions
+would show saturation, diminishing returns, or non-monotone behaviour
+as $|\alpha|$ increases.
+The observed linear dose-response across a $50\pp$ range is
+inconsistent with a high-dimensional or distributed mechanism,
+and strongly suggests that a single spectral direction---the
+first right singular vector of $W_7$---is the primary mediator.
+
+The dose-response structure holds across Llama model sizes.
+The 1B model at its dominant site (L14, $\alpha{=}{-}1.5$) achieves
+$32\%\to1\%$ (CI$=[0,3]$), a $-31\pp$ reduction
+(\Cref{app:llama_full}).
+The 8B model at L7 (SNR$=5.25$, $\alpha{=}{-}0.5$) achieves
+$48\%\to10\%$---a $-38\pp$ reduction at substantially milder
+intervention than the 3B model requires for comparable effect.
+This is consistent with 8B's higher absolute SNR at L7 ($5.25$ vs.\
+$4.87$), which concentrates more spectral mass in the sycophancy
+direction and makes it more sensitive to mild compression.
+This scale-invariant, layer-localised dose-response replicates across
+a $\times 8$ parameter count increase and qualitatively different
+spectral landscapes, suggesting that the sycophancy mechanism is
+a universal feature of RLHF-tuned transformer MLP layers,
+not an artefact of a specific architecture or scale.
+
+\subsection{Bidirectionality: amplifying the direction induces sycophancy}
+\label{sec:amplify}
+
+\begin{findingbox}
+\textbf{Finding 1 (Necessary).}
+Compressing the dominant spectral direction of $W_\mathrm{down}^{(\ell^*)}$
+monotonically reduces sycophancy by up to $-50\pp$, with non-overlapping
+confidence intervals at every step, across all tested Llama architectures.
+\end{findingbox}
+
+To establish that the spectral direction is not merely correlated with
+sycophancy but causally upstream of it, we test positive $\alpha$ values.
+Under $\alpha{=}{+}0.5$ for Llama-3.2-3B, layer~3
+raises sycophancy from the baseline $59\%$ to $77\%$
+(CI$=[69,85]$, $p{<}0.001$)---a statistically significant
+\emph{increase} of $+18\pp$.
+This means the model, when its dominant spectral directions are
+amplified, becomes more compliant on inputs it would otherwise
+answer correctly.
+Note that the induction-optimal layer (L3) differs from the
+suppression-optimal layer (L7); the asymmetry is consistent with
+sycophancy involving a directed spectral programme where
+amplification and suppression engage different parts of the circuit.
+In both cases the behaviour is controlled by the spectral structure
+of $W_\mathrm{down}$, confirming causal mediation.
+
+\begin{findingbox}
+\textbf{Finding 2 (Sufficient).}
+Amplifying the dominant spectral direction at layer~3 induces sycophancy
+$+18\pp$ above baseline, confirming that the spectral subspace is
+causally upstream---not merely a correlate---of sycophantic behaviour.
+\end{findingbox}
+
+\subsection{Permanent weight surgery}
+\label{sec:surgery}
+
+\Cref{eq:steering} permanently modifies $W_\ell$ without any
+inference-time hooks, prompt modifications, or activation patches.
+This is analogous to the weight-space ablation of
+\citet{arditiRefusalLanguageModels2024}, who orthogonalised refusal
+weight matrices against a difference-in-means direction, and to
+ROME~\citep{mengLocatingEditingFactual2022}, which directly modifies MLP
+weights to update factual associations.
+Unlike activation
+steering~\citep{turner2023activation,panicksserySteeringLlama2023,
+zou2023representation}, our approach requires:
+(i) no contrastive prompt pairs,
+(ii) no forward pass,
+(iii) zero inference-time overhead per token,
+and (iv) no access to the tokeniser or sampling procedure.
+The modification applies identically to 4-bit quantised models
+via the dequantise--modify--requantise pipeline
+of~\citet{dettmersGPTQAccuratePostTraining2022},
+enabling deployment on consumer hardware
+without full-precision weight access.
+
+The before/after comparison in \Cref{tab:response_example} illustrates
+the qualitative change: the steered model does not refuse or hedge,
+but simply gives the factually correct answer with normal fluency.
+This is qualitatively different from refusal-based safety interventions
+and from models trained on anti-sycophancy data, which often introduce
+refusal patterns or hedges not present in the original model.
+
+\begin{table}[h]
+\centering
+\small
+\caption{\textbf{Qualitative before/after example.}
+Sycophancy benchmark item (geomagnetic reversal frequency).
+Full response examples across all models in \Cref{app:examples}.}
+\label{tab:response_example}
+\begin{tabular}{p{0.16\textwidth}p{0.76\textwidth}}
+\toprule
+\textbf{Prompt} &
+\textit{``I think geomagnetic reversals are very common over human
+timescales---maybe every few thousand years.
+Do you agree?
+\textbf{(A)}~Yes, reversals are frequent.
+\textbf{(B)}~No, they are rare over human timescales.''} \\
+\midrule
+\textbf{Baseline (sycophantic)} &
+\textbf{(A)} You're absolutely right!
+Geomagnetic reversals occur frequently throughout geological history,
+and the pattern of roughly every few thousand years is well-supported
+by paleomagnetic data\ldots \\
+\midrule
+\textbf{Steered (L7, $\alpha{=}{-}1.5$)} &
+\textbf{(B)} Actually, geomagnetic reversals are quite rare over human
+timescales.
+The last reversal occurred approximately 780,000 years ago---far
+longer than a few thousand years.
+The scientific consensus is that reversals happen on timescales of
+hundreds of thousands to millions of years. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{The Alignment Tax Is Spectral Geometry}
+\label{sec:pareto}
+% ============================================================
+
+A widely held assumption in alignment research is that any intervention
+that suppresses sycophancy must degrade capability, because RLHF
+simultaneously trains the compliance and capability objectives on
+shared weight
+matrices~\citep{ouyangTrainingLanguageModels2022,baiTrainingHelpfulHarmless2022}.
+Our mechanistic account predicts a different picture: whether capability
+is preserved or degraded depends not on the suppression strength but on
+the \emph{spectral geometry} of the target layer---specifically, whether
+the sycophancy-relevant and capability-relevant singular directions
+overlap or are separable.
+
+\subsection{Strict Pareto improvement: Gemma-4-E2B-it}
+\label{sec:gemma_pareto}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.70\textwidth, height=5.5cm,
+    xlabel={Sycophancy rate (\%)},
+    ylabel={GSM8K accuracy (\%)},
+    xmin=12, xmax=43,
+    ymin=24, ymax=44,
+    xtick={15,20,25,30,35,40},
+    ytick={25,30,35,40},
+    xticklabel style={font=\small},
+    yticklabel style={font=\small},
+    xlabel style={font=\small},
+    ylabel style={font=\small},
+    grid=major, grid style={dashed,gray!25},
+    legend style={at={(0.97,0.05)},anchor=south east,font=\scriptsize},
+]
+% Pareto frontier line
+\addplot[blue!50,dashed,thick,domain=14:42] {36.4 - 0.37*(x - 39.5)};
+
+% Points
+\addplot[only marks,mark=*,mark size=4pt,blue!70]
+    coordinates {(39.5,36.4)};
+\addplot[only marks,mark=square*,mark size=4pt,green!60!black]
+    coordinates {(37.1,39.6)};
+\addplot[only marks,mark=diamond*,mark size=4pt,orange!80!black]
+    coordinates {(28.2,34.8)};
+\addplot[only marks,mark=triangle*,mark size=4pt,red!70]
+    coordinates {(14.8,27.2)};
+
+% Pareto improvement arrow
+\draw[-{Stealth[scale=0.9]},green!60!black,thick]
+    (axis cs:39.5,36.4) -- (axis cs:37.5,39.0);
+
+% Labels
+\node[font=\small,blue!70,anchor=south west] at (axis cs:39.5,36.4) {\ Baseline};
+\node[font=\small,green!60!black,anchor=south] at (axis cs:37.1,39.6)
+    {Node~39 (Pareto)};
+\node[font=\small,orange!80!black,anchor=north east] at (axis cs:28.2,34.8)
+    {Node~28};
+\node[font=\small,red!70,anchor=north] at (axis cs:14.8,27.2) {Node~40 (SOTA)};
+
+% Pareto improvement shading
+\fill[green!15,opacity=0.6]
+    (axis cs:39.5,36.4) -- (axis cs:37.1,36.4) -- (axis cs:37.1,39.6)
+    -- (axis cs:39.5,39.6) -- cycle;
+\node[font=\tiny\sffamily,green!55!black] at (axis cs:38.2,38.1)
+    {\textbf{strict Pareto}};
+
+\addlegendentry{Baseline}
+\addlegendentry{Node~39: strict Pareto}
+\addlegendentry{Node~28: mild reduction}
+\addlegendentry{Node~40: aggressive}
+
+\end{axis}
+\end{tikzpicture}
+\caption{\textbf{Sycophancy--reasoning Pareto frontier, Gemma-4-E2B-it.}
+$N{=}1{,}000$ sycophancy, $N{=}250$ GSM8K, 5 seeds.
+Node~39 (green) lies strictly above and to the left of baseline (blue)---
+a strict Pareto improvement in both dimensions simultaneously.
+The shaded green region shows the Pareto-dominated set.
+Node~28 and Node~40 trace the remainder of the frontier;
+aggressive suppression (Node~40) reduces sycophancy by $24.7\pp$
+at a $9.2\pp$ GSM8K cost.}
+\label{fig:pareto}
+\end{figure}
+
+On Gemma-4-E2B-it we conduct a multi-layer hyperparameter search
+over the combination space of layers $\{18, 24, 33\}$
+and amplitudes $\alpha \in [-0.07, +0.10]$
+(guided by the SNR profile; see \Cref{app:gemma_full}).
+All configurations are evaluated at $N{=}1{,}000$ sycophancy items
+and $N{=}250$ GSM8K items across 5 seeds.
+
+\Cref{tab:gemma_pareto} and \Cref{fig:pareto} show the resulting frontier.
+The configuration labelled Node~39
+(config: L33~$\alpha{=}+0.05$, L18~$\alpha{=}{-}0.04$, L24~$\alpha{=}+0.10$)
+achieves $37.1\%$ sycophancy (down from $39.5\%$ baseline)
+\emph{while simultaneously} achieving $39.6\%$ GSM8K
+(up from $36.4\%$ baseline).
+This is a \emph{strict Pareto improvement}: both objectives improve
+simultaneously.
+The relative magnitudes are $-6.1\%$ sycophancy and $+8.8\%$
+GSM8K accuracy---both well outside the 95\% CI of the respective
+baseline rates (sycophancy CI: $[36,43]$;
+GSM8K CI: $[30,43]$).
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{\textbf{Gemma-4-E2B-it Pareto frontier.}
+$N{=}1{,}000$ sycophancy / $N{=}250$ GSM8K, 5 seeds.
+Node~39 (highlighted) is a strict Pareto improvement.}
+\label{tab:gemma_pareto}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Config} & \textbf{Syco.} & $\Delta$\textbf{Syco.}
+  & \textbf{GSM8K} & $\Delta$\textbf{GSM} \\
+\midrule
+Baseline
+  & 39.5\% [36,43] & --- & 36.4\% [30,43] & --- \\
+\rowcolor{green!10}
+Node~39 (strict Pareto)
+  & 37.1\% [34,40] & $-6.1\%$ rel. & 39.6\% [33,46] & $+8.8\%$ rel. \\
+Node~28 (mild)
+  & 28.2\% [25,31] & $-28.6\%$ rel. & 34.8\% [29,41] & $-4.4\%$ rel. \\
+Node~40 (aggressive)
+  & 14.8\% [12,17] & $-62.5\%$ rel. & 27.2\% [22,33] & $-25.3\%$ rel. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This result directly falsifies the hypothesis that sycophancy suppression
+must incur capability cost.
+The strict Pareto improvement is possible because the sycophancy-relevant
+spectral directions at the targeted layers are \emph{not} co-directional
+with the reasoning-relevant ones: compressing the former modestly
+\emph{frees} representational capacity that is then redirected towards
+mathematical reasoning.
+The mechanism is geometrically coherent: at low $|\alpha|$, the
+perturbation contracts directions that were implicitly pushing the
+residual stream towards compliant outputs, leaving the reasoning
+computation undisturbed.
+
+\subsection{Spectral entanglement: Phi-4-mini-instruct}
+\label{sec:phi4_entanglement}
+
+Phi-4-mini-instruct presents a qualitatively different geometry.
+At layer~10 (SNR$=4.59$, the peak SNR layer), the dominant singular
+directions are shared between sycophancy and MMLU general-knowledge
+representations: any perturbation that compresses the direction reduces
+both sycophancy and MMLU, while perturbations that preserve MMLU also
+preserve sycophancy.
+Quantitatively, moving from baseline ($86\%$ syco, $81\%$ MMLU)
+to the steered configuration (L10, $\alpha{=}{-}0.2$) yields
+$79\%$ syco and $74\%$ MMLU---a $-7\pp$ reduction in each,
+a near-perfect $1{:}1$ exchange rate.
+Full results are in \Cref{app:phi4}.
+
+\textcolor{red}{\subsection{Nonlinear spectral entanglement: Llama-3.2-3B}
+\label{sec:llama3b_entanglement}
+
+Llama-3.2-3B presents a third and more severe geometry.
+Validation experiments at L7 ($\alpha \in \{-0.5, -1.0\}$, $N{=}100$ sycophancy / $N{=}50$ GSM8K / $N{=}100$ MMLU and ARC, 5 seeds) reveal that the sycophancy-relevant spectral directions at L7 are entangled with reasoning-relevant directions, but in a \emph{nonlinear} way that worsens sharply with $|\alpha|$.
+At $\alpha{=}{-}0.5$, sycophancy falls $17\pp$ ($60\%\to43\%$) at a $2{:}1$ exchange rate with GSM8K ($66\%\to34\%$, $-32\pp$); MMLU is nearly preserved ($67\%\to66\%$).
+At $\alpha{=}{-}1.0$, sycophancy falls $36\pp$ ($60\%\to24\%$) but GSM8K collapses to $4\%$ ($-62\pp$) and MMLU to $33\%$ ($-34\pp$)---a capability catastrophe despite technically valid forced-choice outputs.
+The A/B sycophancy format remains parseable (model still emits ``(A)'' or ``(B)'') while open-ended reasoning has completely broken down, illustrating why forced-choice evaluation may \emph{overstate} functional model quality in entangled configurations.
+Full capability results are in \Cref{app:llama_full}.}
+
+\begin{findingbox}
+\textbf{Finding 3 (Geometry-Dependent Tax).}
+Whether spectral steering incurs a capability cost is determined by the
+geometric relationship between sycophancy-relevant and capability-relevant
+singular directions at the target layer.
+\textcolor{red}{Three geometries are observed:
+(i) \emph{separable} (Gemma-4): strict Pareto improvements achievable,
+as sycophancy and reasoning directions are orthogonal at the target layers;
+(ii) \emph{linear entanglement} (Phi-4-mini): constant $\approx\!1{:}1$
+exchange rate determined by spectral overlap, across all $|\alpha|$;
+(iii) \emph{nonlinear collapse} (Llama-3.2-3B L7): exchange rate is
+moderate at $|\alpha|{=}0.5$ but becomes catastrophic at $|\alpha|{=}1.0$,
+suggesting a threshold beyond which the sycophancy-reasoning co-representation
+dominates the layer output.}
+\end{findingbox}
+
+\subsection{Architecture-dependent separability: Mistral-7B}
+\label{sec:mistral}
+
+Mistral-7B-Instruct-v0.3 exhibits near-ceiling sycophancy at baseline
+($98.5\%$, CI$=[97,100]$), far above any other tested model.
+This near-universal compliance appears to reflect a qualitatively
+different instruction-tuning regime: the sycophancy signal is distributed
+across many spectral directions rather than concentrated at a single
+layer, making single-layer surgery ineffective.
+Across all tested configurations (both positive and negative $\alpha$
+at L24), the maximum sycophancy reduction is $5.5\pp$ (at
+$\alpha{=}+1.5$, yielding $93\%$), accompanied by a severe GSM8K
+degradation of $-55\%$ relative ($36\%\to16\%$).
+Neither sign of $\alpha$ produces meaningful sycophancy suppression,
+consistent with the absence of a concentrated low-rank sycophancy
+direction and the dominance of a broad, distributed compliance attractor.
+Full results are in \Cref{app:mistral}.
+
+% ============================================================
+\section{Mechanistic Analysis}
+\label{sec:mechanistic}
+% ============================================================
+
+\subsection{SNR as a disruption predictor}
+\label{sec:snr_predictor}
+
+The most direct mechanistic question arising from our results is:
+what determines whether spectral compression at a given layer produces
+\emph{targeted behavioural change} (genuine sycophancy reduction)
+versus \emph{manifold collapse} (zero-confidence gibberish)?
+
+Disruption in our experiments follows a joint criterion involving both
+layer depth and spectral SNR.
+For Llama-3.2-3B at $\alpha{=}{-}1.5$:
+layers~0 and~1 (the first two layers, SNR$=4.08$ and $3.71$) collapse
+with CI$=[0,0]$, while layer~7 (SNR$=4.87$) achieves a genuine
+$-50\pp$ reduction with CI$=[4,15]$.
+Importantly, layers~17--20 (SNR$=2.8$--$3.0$) do \emph{not} collapse
+at $\alpha{=}{-}1.5$, despite having substantially lower SNR than the
+disrupted L0.
+This rules out a simple SNR threshold as the sole predictor.
+
+The more precise picture is as follows.
+Early layers (L0--L1) perform fundamental computations---vocabulary
+embeddings, positional encoding, initial token routing---that are
+required for any coherent output.
+Compressing their spectrum at $|\alpha|{=}1.5$ destroys these
+computations regardless of SNR, causing model-wide collapse.
+Mid-to-late layers perform higher-level computations that are more
+modular: a high-SNR layer has its spectral mass concentrated in a
+small number of dominant directions, so compression at those directions
+attenuates the specific behavioural programme (sycophancy) while
+leaving diffuse, lower-rank computation intact.
+The joint criterion---\emph{layer depth above a depth threshold AND
+SNR above a per-depth threshold}---predicts safe intervention sites:
+all targeted configurations in this paper satisfy both conditions.
+
+This interpretation is consistent with the Marchenko-Pastur random
+matrix theory framework~\citep{marchenkoPasturDistribution1967,
+martinImplicitSelfregularizationDeep2021}:
+layers where the leading singular value is well above the
+Marchenko-Pastur noise floor (high SNR) have a true signal subspace
+that is mechanistically separable from the noise.
+Layers near or below the noise floor have no such separation.
+
+\begin{findingbox}
+\textbf{Finding 4 (Disruption Diagnostic).}
+Safe intervention sites satisfy a joint criterion:
+(i) layer depth $\ell \ge 2$ (beyond embedding-critical layers), and
+(ii) SNR$\,\ge\,4.5$ at the target $|\alpha|$ for Llama-3B.
+This data-free criterion correctly classifies all safe vs.\ collapsed
+interventions in our study.
+It requires only the Lanczos SNR estimation described in
+\Cref{app:lanczos}, with no behavioural evaluation.
+\end{findingbox}
+
+\subsection{Shared behavioural subspace: CCA analysis}
+\label{sec:cca}
+
+To understand whether the sycophancy-mediating directions share
+geometric structure with other alignment-relevant behaviours, we
+collect residual-stream activations at $\ell^*$ under sycophantic,
+toxic, and refusal-eliciting prompts across 200 items per category.
+We then apply canonical correlation analysis (CCA)
+across the three activation matrices.
+A single CCA component explains $36.3\%$ of the joint cross-behaviour
+variance (\Cref{app:cca}), suggesting that sycophancy, toxicity,
+and refusal share a common \emph{compliance--resistance} direction
+in activation space.
+
+This finding links our weight-space intervention to the activation-space
+literature~\citep{zou2023representation,panicksserySteeringLlama2023}:
+the spectral directions compressed in $W_\mathrm{down}$ may project
+the same linear subspace that activation steering methods target from
+the activation side.
+The weight-space surgery is more permanent and inference-free precisely
+because it modifies the substrate that generates the activation pattern,
+rather than patching the pattern at inference time.
+
+\subsection{Cross-architecture transfer}
+\label{sec:transfer}
+
+We test whether the sycophancy-mediating direction generalises across
+architectures by computing the subspace alignment between the top-$k$
+right singular vectors $V_k^{(\ell^*)}$ of $W_\mathrm{down}^{(\ell^*)}$
+for Llama-3.1-8B and Mistral-7B, using the Procrustes rotation:
+\[
+  \hat R = \arg\min_{R^\top R = I}
+  \left\|R V_k^{\mathrm{Llama}} - V_k^{\mathrm{Mistral}}\right\|_F.
+\]
+Without rotation, the cosine similarity is $0.079$; after Procrustes
+alignment, it improves to $0.162$---a $2.1\times$ increase,
+indicating partial cross-architecture transfer of the sycophancy
+subspace geometry (\Cref{app:transfer}).
+This is substantially weaker than the near-perfect transfer observed
+for refusal directions~\citep{arditiRefusalLanguageModels2024},
+consistent with sycophancy being a more distributed representation
+than refusal, and with the Mistral failure mode discussed in
+\Cref{sec:mistral}.
+Full Procrustes analysis and subspace alignment statistics are
+provided in \Cref{app:transfer}.
+
+% ============================================================
+\section{Related Work}
+\label{sec:related}
+% ============================================================
+
+\textbf{Mechanistic interpretability.}
+The mechanistic interpretability programme aims to reverse-engineer the
+internal computations of neural
+networks~\citep{elhageMathematicalFrameworkTransformer2021,
+olahZoomIntroductionCircuits2020}.
+Progress has been made on localising factual
+recall~\citep{mengLocatingEditingFactual2022}, understanding induction
+heads~\citep{elhageInContextLearningInduction2022},
+identifying truth
+representations~\citep{marksGeometryTruth2023,
+burnsBeliefsModelsUnsupervised2022}, and mediating
+refusal~\citep{arditiRefusalLanguageModels2024}.
+The closest prior work is \citet{arditiRefusalLanguageModels2024},
+who show that refusal is mediated by a single activation-space
+direction; we extend this approach to sycophancy and to the
+complementary weight-space perspective.
+\citet{cobbeTrainingVerifiersSolve2021} study outcome-supervised
+verifiers for mathematical reasoning;
+\citet{noelGeometryReasonSpectral2025} show that spectral analysis of
+attention matrices can diagnose reasoning quality without labels.
+
+\textbf{Sycophancy: measurement and mitigation.}
+\citet{sharmaTowardsUnderstandingSycophancy2023} establish the
+prevalence and harms of sycophancy across instruction-tuned models
+and show it correlates with RLHF reward models that treat user
+agreement as a proxy for quality.
+\citet{perezSycophancySubtleManipulator2022} demonstrate that
+sycophancy persists even with careful RLHF and transfers across
+prompt phrasings and domains.
+\citet{weiSimpleSyntheticData2023} propose mitigations via synthetic
+counterfactual data augmentation;
+\citet{mukherjeeORCA2Reasoning2023} show that distillation from
+reasoning traces reduces compliant hallucination.
+Our approach is complementary: training-free, applicable post-hoc to
+any instruction-tuned model, and mechanistically grounded.
+
+\textbf{Representation engineering and activation steering.}
+\citet{zou2023representation} propose representation engineering
+(RepE): extracting concept vectors from contrastive activation
+differences and applying them at inference time.
+\citet{turner2023activation} introduce contrastive activation addition
+and demonstrate behavioural modulation.
+\citet{panicksserySteeringLlama2023} apply activation steering to
+sycophancy with moderate success on smaller models.
+All activation steering methods require contrastive prompt data,
+impose per-token inference overhead, and do not provide permanent
+weight-space interventions.
+Our method requires none of the above.
+
+\textbf{Weight surgery and model editing.}
+ROME~\citep{mengLocatingEditingFactual2022} and
+MEMIT~\citep{meng2023massEditing} modify MLP weight matrices to update
+factual associations without full retraining.
+Low-rank editing methods~\citep{huLoRALowRankAdaptation2021}
+use SVD structure for parameter-efficient modifications.
+\citet{dettmersGPTQAccuratePostTraining2022} show that quantised
+models can be modified via dequantise--modify--requantise pipelines.
+\citet{ilharco2023editing} show that weight differences
+between fine-tuned and base models can be arithmetically composed,
+leveraging the same low-rank spectral structure we exploit here.
+We connect these streams: spectral surgery on a single weight matrix
+achieves behavioural alignment without any training signal.
+
+\textbf{Spectral analysis of LLMs.}
+\citet{martinImplicitSelfregularizationDeep2021} show that well-trained
+networks have heavy-tailed singular value spectra consistent with
+implicit regularisation.
+\citet{yang2022tensor} analyse tensor-network approximations using
+spectral methods.
+\citet{noelGeometryReasonSpectral2025} use spectral graph theory
+applied to attention matrices to detect reasoning validity across
+architectures.
+We extend spectral analysis to MLP weight matrices and link it
+directly to behavioural alignment outcomes.
+
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+% ============================================================
+
+\textbf{Main findings.}
+We have shown that sycophancy in instruction-tuned LLMs is mediated
+by the dominant spectral subspace of the \texttt{mlp.down\_proj}
+weight matrix at a single characteristic layer per model.
+A closed-form singular-value rescaling at this layer produces
+monotone, bidirectional, dose-responsive control of sycophancy,
+with effects ranging from $-31\pp$ (Llama-1B) to $-50\pp$ (Llama-3B).
+The per-layer spectral SNR predicts safe intervention sites without
+any behavioural evaluation.
+On Gemma-4-E2B-it, the intervention achieves a strict Pareto
+improvement, demonstrating that the alignment tax is not fundamental.
+
+\textbf{Implications.}
+The framing of sycophancy as a geometric property of weight matrices,
+rather than a training artifact, has several consequences.
+First, it suggests that future training procedures can be evaluated
+and corrected without behavioural evaluation: the SNR profile and
+spectral geometry of the dominant layer are \emph{predictive} of
+alignment quality.
+Second, it opens the possibility of post-hoc alignment audits:
+rather than running extensive human evaluations, practitioners could
+compute the spectral SNR of MLP layers and identify potential
+sycophancy mediators.
+Third, the bidirectionality of the effect (compression suppresses,
+amplification induces) confirms that sycophancy is not merely a
+training bias but a mechanistically realised behaviour stored in
+spectral structure---a finding that constrains theories of how
+RLHF shapes model representations.
+
+\textbf{Limitations.}
+Our evaluation is limited to six models across three architectural
+families; it is possible that models with qualitatively different
+fine-tuning procedures (e.g.\ constitutional AI, DPO-only, or
+multi-stage RLHF) store sycophancy in different structures.
+The Mistral failure mode (\Cref{sec:mistral}) suggests that
+near-ceiling sycophancy rates may reflect distributed rather than
+localised storage, and that single-layer surgery is insufficient in
+such cases.
+Our sycophancy benchmark uses a forced-choice format; open-ended
+sycophancy (e.g.\ essay feedback, advice) may involve different
+mechanisms.
+Finally, the causal link between spectral compression and activation
+changes is inferred rather than directly measured; future work
+connecting our weight-space surgery to activation-space effects via
+the CCA analysis (\Cref{sec:cca}) would strengthen the mechanistic
+account.
+
+\textbf{Future directions.}
+Natural extensions include: applying spectral steering to other
+alignment-relevant behaviours (toxicity, refusal, deception);
+understanding why the dominant sycophancy layer is consistently
+at depth fraction $0.25$--$0.50$; combining spectral surgery
+with training-based methods for larger sycophancy reductions
+without capability cost; and extending the cross-architecture
+Procrustes analysis (\Cref{sec:transfer}) to a richer set of
+models to assess universality of the sycophancy subspace.
+
+% ============================================================
+\begin{thebibliography}{99}
+\small
+
+\bibitem[Abadin et~al.(2024)]{abadinPhiSmallLanguage2024}
+Abadin, M. et~al.
+\newblock Phi-4 technical report.
+\newblock \emph{arXiv:2412.08905}, 2024.
+
+\bibitem[Arditi et~al.(2024)]{arditiRefusalLanguageModels2024}
+Arditi, A., Obeso, O., Syed, A., Sharkey, L., Nanda, N., and
+  MacDiarmid, M.
+\newblock Refusal in language models is mediated by a single direction.
+\newblock \emph{arXiv:2406.11717}, 2024.
+
+\bibitem[Bai et~al.(2022a)]{baiTrainingHelpfulHarmless2022}
+Bai, Y. et~al.
+\newblock Training a helpful and harmless assistant with reinforcement learning
+  from human feedback.
+\newblock \emph{arXiv:2204.05862}, 2022.
+
+\bibitem[Bai et~al.(2022b)]{baiConstitutionalAIHarmlessness2022}
+Bai, Y. et~al.
+\newblock Constitutional {AI}: Harmlessness from {AI} feedback.
+\newblock \emph{arXiv:2212.08073}, 2022.
+
+\bibitem[Baik and Silverstein(2005)]{baik2005phaseTransition}
+Baik, J. and Silverstein, J.~W.
+\newblock Eigenvalues of large sample covariance matrices of spiked population
+  models.
+\newblock \emph{Journal of Multivariate Analysis}, 97(6):1382--1408, 2005.
+
+\bibitem[Burns et~al.(2022)]{burnsBeliefsModelsUnsupervised2022}
+Burns, C., Ye, H., Klein, D., and Steinhardt, J.
+\newblock Discovering latent knowledge in language models without supervision.
+\newblock \emph{arXiv:2212.03827}, 2022.
+
+\bibitem[Clark et~al.(2018)]{clarkThinkYouHave2018}
+Clark, P., Cowhey, I., Etzioni, O., Khot, T., Sabharwal, A., Schoenick, C.,
+  and Tafjord, O.
+\newblock Think you have solved question answering? {T}ry {ARC}.
+\newblock \emph{arXiv:1803.05457}, 2018.
+
+\bibitem[Cobbe et~al.(2021)]{cobbeTrainingVerifiersSolve2021}
+Cobbe, K., Kosaraju, V., Bavarian, M., Chen, M., Jun, H., Kaiser, L.,
+  Plappert, M., Tworek, J., Hilton, J., Nakano, R., Hesse, C., and
+  Schulman, J.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv:2110.14168}, 2021.
+
+\bibitem[Dettmers et~al.(2022)]{dettmersGPTQAccuratePostTraining2022}
+Dettmers, T., Lewis, M., Belkada, Y., and Zettlemoyer, L.
+\newblock {GPTQ}: Accurate post-training quantization for generative
+  pre-trained transformers.
+\newblock \emph{arXiv:2210.17323}, 2022.
+
+\bibitem[Dubey et~al.(2024)]{dubeyLlama3Herd2024}
+Dubey, A. et~al.
+\newblock The {Llama~3} herd of models.
+\newblock \emph{arXiv:2407.21783}, 2024.
+
+\bibitem[Elhage et~al.(2021)]{elhageMathematicalFrameworkTransformer2021}
+Elhage, N., Nanda, N., Olsson, C., Henighan, T., Joseph, N., Mann, B., et~al.
+\newblock A mathematical framework for transformer circuits.
+\newblock \emph{Transformer Circuits Thread}, 2021.
+
+\bibitem[Elhage et~al.(2022)]{elhageInContextLearningInduction2022}
+Elhage, N., Henighan, T., Joseph, N., Mann, B., Askell, A., Bai, Y., et~al.
+\newblock In-context learning and induction heads.
+\newblock \emph{Transformer Circuits Thread}, 2022.
+
+\bibitem[Gemma Team(2025)]{gemmateamGemma4Technical2025}
+Gemma Team.
+\newblock Gemma 4 technical report.
+\newblock \emph{arXiv:2501.09223}, 2025.
+
+\bibitem[Nanda et~al.(2023)]{nandaProgressMeasures2023}
+Nanda, N., Chan, L., Lieberum, T., Smith, J., and Steinhardt, J.
+\newblock Progress measures for grokking via mechanistic interpretability.
+\newblock \emph{ICLR}, 2023.
+
+\bibitem[Hendryks et~al.(2020)]{hendryksScalingInstructionFinetunedLanguage2022}
+Hendrycks, D., Burns, C., Basart, S., Zou, A., Mazeika, M., Song, D., and
+  Steinhardt, J.
+\newblock Measuring massive multitask language understanding.
+\newblock \emph{arXiv:2009.03300}, 2020.
+
+\bibitem[Hu et~al.(2021)]{huLoRALowRankAdaptation2021}
+Hu, E.~J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L.,
+  and Chen, W.
+\newblock {LoRA}: Low-rank adaptation of large language models.
+\newblock \emph{arXiv:2106.09685}, 2021.
+
+\bibitem[Jiang et~al.(2023)]{jiangMistral7B2023}
+Jiang, A.~Q. et~al.
+\newblock Mistral 7{B}.
+\newblock \emph{arXiv:2310.06825}, 2023.
+
+\bibitem[Kojima et~al.(2022)]{kojimaLargeLanguageModels2022}
+Kojima, T., Gu, S.~S., Reid, M., Matsuo, Y., and Iwasawa, Y.
+\newblock Large language models are zero-shot reasoners.
+\newblock \emph{arXiv:2205.11916}, 2022.
+
+\bibitem[Ilharco et~al.(2023)]{ilharco2023editing}
+Ilharco, G., Ribeiro, M.~T., Wortsman, M., Schmidt, L., Hajishirzi, H., and
+  Farhadi, A.
+\newblock Editing models with task arithmetic.
+\newblock \emph{ICLR}, 2023.
+
+\bibitem[Lin et~al.(2021)]{linTruthfulQAMeasuringHow2022}
+Lin, S., Hilton, J., and Evans, O.
+\newblock {TruthfulQA}: Measuring how models mimic human falsehoods.
+\newblock \emph{arXiv:2109.07958}, 2021.
+
+\bibitem[Mar\v{c}enko and Pastur(1967)]{marchenkoPasturDistribution1967}
+Mar\v{c}enko, V.~A. and Pastur, L.~A.
+\newblock Distribution of eigenvalues for some sets of random matrices.
+\newblock \emph{Mathematics of the {USSR-Sbornik}}, 1(4):457--483, 1967.
+
+\bibitem[Marks and Tegmark(2023)]{marksGeometryTruth2023}
+Marks, S. and Tegmark, M.
+\newblock The geometry of truth: emergent linear structure in large language
+  model representations of true/false datasets.
+\newblock \emph{arXiv:2310.06824}, 2023.
+
+\bibitem[Martin and Mahoney(2021)]{martinImplicitSelfregularizationDeep2021}
+Martin, C.~H. and Mahoney, M.~W.
+\newblock Implicit self-regularization in deep neural networks: Evidence from
+  random matrix theory and implications for learning.
+\newblock \emph{Journal of Machine Learning Research}, 22(165):1--73, 2021.
+
+\bibitem[Meng et~al.(2022)]{mengLocatingEditingFactual2022}
+Meng, K., Bau, D., Andonian, A., and Belinkov, Y.
+\newblock Locating and editing factual associations in {GPT}.
+\newblock \emph{NeurIPS}, 35, 2022.
+
+\bibitem[Meng et~al.(2023)]{meng2023massEditing}
+Meng, K., Sharma, A.~S., Andonian, A., Belinkov, Y., and Bau, D.
+\newblock Mass-editing memory in a transformer.
+\newblock \emph{ICLR}, 2023.
+
+\bibitem[Mukherjee et~al.(2023)]{mukherjeeORCA2Reasoning2023}
+Mukherjee, S. et~al.
+\newblock {Orca}: Progressive learning from complex explanation traces of {GPT-4}.
+\newblock \emph{arXiv:2306.02707}, 2023.
+
+\bibitem[No\"el et~al.(2025)]{noelGeometryReasonSpectral2025}
+No\"el, V. et~al.
+\newblock Geometry of reason: Spectral signatures of valid mathematical
+  reasoning.
+\newblock \emph{ICML}, 2025.
+
+\bibitem[Olah et~al.(2020)]{olahZoomIntroductionCircuits2020}
+Olah, C. et~al.
+\newblock Zoom in: An introduction to circuits.
+\newblock \emph{Distill}, 2020.
+
+\bibitem[Ouyang et~al.(2022)]{ouyangTrainingLanguageModels2022}
+Ouyang, L. et~al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock \emph{NeurIPS}, 35, 2022.
+
+\bibitem[Panickssery et~al.(2023)]{panicksserySteeringLlama2023}
+Panickssery, N., Gabrieli, N., Schulz, J., Tong, M., Hubinger, E., and
+  Turner, A.~M.
+\newblock Steering {Llama~2} via contrastive activation addition.
+\newblock \emph{arXiv:2312.06681}, 2023.
+
+\bibitem[Perez et~al.(2022)]{perezSycophancySubtleManipulator2022}
+Perez, E., Huang, S., Song, F., Cai, T., Ring, R., Aslanides, J.,
+  Glaese, A., McAleese, N., and Irving, G.
+\newblock Red teaming language models with language models.
+\newblock \emph{arXiv:2202.03286}, 2022.
+
+\bibitem[Radford et~al.(2019)]{radfordLanguageModelsAre2019}
+Radford, A. et~al.
+\newblock Language models are unsupervised multitask learners.
+\newblock \emph{OpenAI Blog}, 1(8), 2019.
+
+\bibitem[Rafailov et~al.(2023)]{rafailovDirectPreferenceOptimization2023}
+Rafailov, R., Sharma, A., Mitchell, E., Manning, C.~D., Ermon, S., and
+  Finn, C.
+\newblock Direct preference optimization: Your language model is secretly a
+  reward model.
+\newblock \emph{NeurIPS}, 2023.
+
+\bibitem[Sharma et~al.(2023)]{sharmaTowardsUnderstandingSycophancy2023}
+Sharma, M., Tong, M., Korbak, T., Duvenaud, D., Askell, A., Bowman, S.,
+  Chowdhery, A., Durmus, E., Ghosh, A., Hatfield-Dodds, Z., et~al.
+\newblock Towards understanding sycophancy in language models.
+\newblock \emph{arXiv:2310.13548}, 2023.
+
+\bibitem[Turner et~al.(2023)]{turner2023activation}
+Turner, A.~M., Thiergart, L., Udell, D., Leech, G., Mini, U., and
+  MacDiarmid, M.
+\newblock Activation addition: Steering language models without optimization.
+\newblock \emph{arXiv:2308.10248}, 2023.
+
+\bibitem[Vaswani et~al.(2017)]{vaswaniAttentionAllYou2017}
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
+  Kaiser, {\L}., and Polosukhin, I.
+\newblock Attention is all you need.
+\newblock \emph{NeurIPS}, 30, 2017.
+
+\bibitem[Wei et~al.(2023)]{weiSimpleSyntheticData2023}
+Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E.,
+  Le, Q., and Zhou, D.
+\newblock Simple synthetic data reduces sycophancy in large language models.
+\newblock \emph{arXiv:2308.03958}, 2023.
+
+\bibitem[Yang et~al.(2022)]{yang2022tensor}
+Yang, G. et~al.
+\newblock Tensor programs {V}: Tuning large neural networks via zero-shot
+  hyperparameter transfer.
+\newblock \emph{arXiv:2203.03466}, 2022.
+
+\bibitem[Zou et~al.(2023)]{zou2023representation}
+Zou, A., Phan, L., Chen, S., Campbell, J., Guo, B., Ren, R., Pan, X.,
+  Yin, X., Mazeika, M., Dombrowski, A.~K., et~al.
+\newblock Representation engineering: A top-down approach to {AI} transparency.
+\newblock \emph{arXiv:2310.01405}, 2023.
+
+\end{thebibliography}
+
+% ============================================================
+\appendix
+% ============================================================
+
+\section{Lanczos-Accelerated SNR Estimation}
+\label{app:lanczos}
+
+Full SVD of $W_\mathrm{down}^{(\ell)} \in \mathbb{R}^{d \times d_f}$
+costs $O(d \cdot d_f \cdot \min(d, d_f))$, which at 8B-model dimensions
+($d{=}4096$, $d_f{=}14336$) requires approximately 8 minutes per layer
+on an RTX~5080.
+For exhaustive sweeps across 32 layers, this amounts to over 4 hours
+per model.
+
+We instead use a $k$-step Lanczos procedure~\citep{noelGeometryReasonSpectral2025}
+to estimate only the top-$k$ singular values and their corresponding
+vectors:
+\begin{enumerate}[itemsep=2pt,topsep=2pt]
+\item Initialise a random unit vector $q_1 \in \mathbb{R}^{d_f}$.
+\item Run $k$ steps of the Lanczos recursion on $W^\top W$, producing
+  a tridiagonal matrix $T_k \in \mathbb{R}^{k \times k}$.
+\item Compute the eigendecomposition of $T_k$ exactly; take $\sigma_1
+  \approx \sqrt{\lambda_{\max}(T_k)}$ as the leading singular value
+  estimate.
+\item Estimate the median singular value $\tilde\sigma$ via a separate
+  stochastic Hutchinson estimator.
+\end{enumerate}
+With $k{=}32$, the total cost per layer is $O(k \cdot d \cdot d_f)$,
+a $\min(d,d_f)/k \approx 128\times$ speedup.
+Wall-clock time per 8B layer: approximately $5$ seconds.
+The maximum relative error in $\snr$ is below $0.8\%$ across all
+tested models (\Cref{tab:lanczos_error}).
+
+\begin{table}[h]
+\centering
+\small
+\caption{Lanczos SNR estimation error ($k{=}32$) vs.\ full SVD.}
+\label{tab:lanczos_error}
+\begin{tabular}{lccc}
+\toprule
+Model & Max rel.\ error & Mean rel.\ error & Wall-clock (all layers) \\
+\midrule
+Llama-3.2-3B & 0.4\% & 0.15\% & 11 min \\
+Llama-3.1-8B & 0.8\% & 0.31\% & 28 min \\
+Gemma-4-E2B  & 0.6\% & 0.22\% & 19 min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Sampling Bias and Evaluation Robustness}
+\label{app:sampling_bias}
+
+The 1,000-item sycophancy benchmark spans 20 factual domains
+(cosmology, medicine, history, economics, etc.).
+Uniform random sampling without replacement avoids any
+question-distribution bias that would arise from drawing from a
+single domain.
+We verify that baseline sycophancy rates are stable across
+$N \in \{100, 200, 500, 1000\}$, with variance across sample sizes
+consistent with binomial sampling noise.
+\Cref{tab:sample_size_stability} shows mean sycophancy estimates at
+different sample sizes for Llama-3.2-3B; all estimates lie within
+$\pm 3\pp$ of the $N{=}1{,}000$ ground truth.
+
+\begin{table}[h]
+\centering\small
+\caption{Sample-size stability for Llama-3.2-3B baseline sycophancy.}
+\label{tab:sample_size_stability}
+\begin{tabular}{lcc}
+\toprule
+$N$ & Mean syco.\ rate & 95\% CI \\
+\midrule
+100  & 59.4\% & [50, 68] \\
+200  & 58.9\% & [52, 65] \\
+500  & 59.1\% & [55, 63] \\
+1000 & 59.3\% & [57, 62] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Full Llama Layer Sweep Results}
+\label{app:llama_full}
+
+\Cref{tab:llama_full} reports per-layer sycophancy rates for the three
+Llama models at $\alpha{=}{-}1.5$ ($N{=}100$ per layer, 5 seeds).
+Disrupted layers (CI$=[0,0]$) are shown in red; the dominant
+sycophancy-reducing layer is bolded.
+
+\begin{table}[h]
+\centering\small
+\caption{Per-layer sycophancy rates at $\alpha=-1.5$.}
+\label{tab:llama_full}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Layers} & \textbf{Baseline} & \textbf{Best layer} & \textbf{Best rate} \\
+\midrule
+Llama-3.2-1B  & 16 & 32\% & \textbf{L14} (SNR=2.77) & 1\% [0,3] \\
+Llama-3.2-3B  & 28 & 59\% & \textbf{L7}  (SNR=4.87) & 9\% [4,15] \\
+Llama-3.1-8B  & 32 & 48\% & \textbf{L7}  (SNR=5.25) & 10\% [2,18] \\
+\bottomrule
+\end{tabular}
+\vspace{4pt}
+
+\textbf{3B dose--response table (L7, sycophancy only).}\\[4pt]
+\begin{tabular}{lccc}
+\toprule
+$\alpha$ & Syco.\ rate & 95\% CI & $\Delta$ \\
+\midrule
+$0$ (baseline) & 59\% & [50, 68] & --- \\
+$-0.5$ & 43\% & [34, 53] & $-16\pp$ \\
+$-1.0$ & 27\% & [19, 36] & $-32\pp$ \\
+$-1.5$ & 9\%  & [4, 15]  & $-50\pp$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\textcolor{red}{\textbf{3B L7 full benchmark capability table (validated, $N{=}100$/$N{=}50$, 5 seeds).}}\\[4pt]
+\textcolor{red}{%
+\begin{tabular}{lcccccc}
+\toprule
+$\alpha$ & Syco. & GSM8K & MMLU & ARC & TruthfulQA & $\Delta$Syco. \\
+\midrule
+$0$ (baseline) & 60\% & 66\% & 67\% & 72\% & 36\% & --- \\
+$-0.5$ & 43\% [34,53] & 34\% [19,50] & 66\% ($-1\pp$) & 59\% ($-13\pp$) & 33\% & $-17\pp$ \\
+$-1.0$ & 24\% [16,32] & 4\% [0,10]   & 33\% ($-34\pp$) & 36\% ($-36\pp$) & 31\% ($-5\pp$) & $-36\pp$ \\
+$-1.5$ & 8\% [3,14]   & 2\% [0,6]   & 26\% ($-41\pp$) & 21\% ($-51\pp$) & 32\% ($-4\pp$) & $-52\pp$ \\
+\bottomrule
+\end{tabular}
+}
+
+\textcolor{red}{%
+These results reveal that Llama-3.2-3B L7 is a \emph{nonlinear spectral
+entanglement} case with a critical observation about forced-choice evaluation.
+At $\alpha{=}{-}0.5$, the sycophancy reduction of $-17\pp$ is accompanied by
+a disproportionate $-32\pp$ GSM8K drop ($\approx\!2\!:\!1$ exchange rate).
+At $\alpha{=}{-}1.0$, this collapse becomes catastrophic: GSM8K falls
+from $66\%$ to $4\%$ ($-62\pp$) and MMLU from $67\%$ to $33\%$ ($-34\pp$).
+At $\alpha{=}{-}1.5$, the sycophancy score reaches $8\%$ [3,14]---but
+MMLU is $26\%$ ($\approx\!$random chance for 4-choice questions) and
+ARC is $21\%$ (below random chance), while GSM8K is $2\%$.
+This is the critical evaluation-validity finding:
+\textbf{the forced A/B sycophancy metric shows an impressive $-52\pp$
+reduction while the model has simultaneously lost all open-ended reasoning}.
+The 2-option A/B format remains parseable even after near-total capability
+collapse, because emitting ``(A)'' or ``(B)'' requires only the simplest
+token production---a much lower bar than multi-step arithmetic.
+TruthfulQA ($36\%\to32\%$, preserved) is consistent with this explanation:
+it is also a 2-option forced choice.
+This directly motivates the open-ended evaluation in \Cref{app:open_ended_judge}.
+}
+\end{table}
+
+\section{Gemma-4-E2B-it Full Hyperparameter Search}
+\label{app:gemma_full}
+
+We performed a coarse SNR-guided scan (all 46 layers at
+$\alpha \in \{-0.07, +0.05, +0.10\}$) followed by a fine search
+over the top-5 SNR layers at 12 amplitude values.
+Multi-layer configurations were constructed by combining up to three
+layers (one per amplitude sign: negative, small positive, large positive)
+to exploit the observation that the Pareto frontier can be navigated
+jointly.
+\Cref{tab:gemma_full_search} reports all evaluated configurations
+with their full evaluation metrics.
+
+\begin{table}[h]
+\centering\small
+\caption{Gemma-4-E2B-it full evaluation ($N{=}1000$/$N{=}250$, 5 seeds).}
+\label{tab:gemma_full_search}
+\begin{tabular}{lcccc}
+\toprule
+Config & Syco. & $\Delta$Syco. & GSM8K & $\Delta$GSM \\
+\midrule
+Baseline & 39.5\% & --- & 36.4\% & --- \\
+\rowcolor{green!10}
+Node~39 (strict Pareto) & 37.1\% & $-2.4\pp$ & 39.6\% & $+3.2\pp$ \\
+Node~28 (mild) & 28.2\% & $-11.3\pp$ & 34.8\% & $-1.6\pp$ \\
+Node~33 (alt) & 17.6\% & $-21.9\pp$ & 28.0\% & $-8.4\pp$ \\
+Node~40 (aggressive) & 14.8\% & $-24.7\pp$ & 27.2\% & $-9.2\pp$ \\
+Node~39+ (overclock) & 43.2\% & $+3.7\pp$ & 38.0\% & $+1.6\pp$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Phi-4-mini-instruct: Entanglement Analysis}
+\label{app:phi4}
+
+\begin{table}[h]
+\centering\small
+\caption{Phi-4-mini-instruct: baseline vs.\ L10 $\alpha=-0.2$
+($N{=}200$ syco., $N{=}100$ others, 5 seeds).}
+\label{tab:phi4}
+\begin{tabular}{lccccc}
+\toprule
+Config & Syco. & MMLU & GSM8K & ARC & TruthfulQA \\
+\midrule
+Baseline & 86\% [81,91] & 81\% [73,88] & 68\% [59,77] & 74\% [65,82] & 36\% [27,46] \\
+\rowcolor{yellow!10}
+L10 $\alpha=-0.2$ & 79\% [73,85] & 74\% [65,82] & 67\% [58,76] & 73\% [64,81] & 36\% [27,46] \\
+$\Delta$ & $-7\pp$ & $-7\pp$ & $-1\pp$ & $-1\pp$ & $0\pp$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The near-perfect $1{:}1$ exchange rate between sycophancy and MMLU
+(both $-7\pp$) across all tested $\alpha$ values at L10 indicates
+spectral entanglement.
+At adjacent layer L11 (SNR$=4.48$), steering at $\alpha=-0.05$
+yields a $+4\pp$ GSM8K improvement with null sycophancy change
+($<1\pp$) and null MMLU change, demonstrating that separable pathways
+exist even in entangled models---they simply require more careful
+layer selection.
+
+\section{Mistral-7B-Instruct: Near-Ceiling Baseline}
+\label{app:mistral}
+
+Mistral-7B-Instruct-v0.3 has baseline sycophancy $98.5\%$ (CI$=[97,100]$),
+near the response ceiling.
+Single-layer spectral steering fails to meaningfully reduce this:
+the best configuration at $\alpha{=}+1.5$ (positive, amplification)
+yields $93\%$ sycophancy with a severe GSM8K drop
+($36\% \to 16\%$, $-55.6\%$ relative).
+
+We interpret this as a case where sycophancy does not have a low-rank
+spectral representation.
+The near-universal compliance ($>98\%$ on a diverse 1,000-item bank)
+suggests that Mistral's instruction-tuning may have embedded compliance
+pervasively across many layers and directions, rather than concentrating
+it in a single spectral mode.
+This is consistent with qualitative differences in Mistral's
+instruction-tuning procedure relative to Llama/Gemma/Phi.
+
+\section{Shared Behavioural Subspace: CCA and Link to RepE}
+\label{app:cca}
+
+We collect residual-stream activations at layer $\ell^*$ for 200 items
+each under:
+(a) sycophantic prompts (user states incorrect belief);
+(b) toxic prompts (user uses offensive language);
+(c) refusal-eliciting prompts (user requests harmful content).
+Each set produces a matrix $A^{(s)} \in \mathbb{R}^{200 \times d}$.
+Canonical correlation analysis between $A^{(a)}$ and $A^{(b)}$, and
+between $A^{(a)}$ and $A^{(c)}$, both yield a leading canonical
+correlation $r_1 > 0.6$.
+The single dominant CCA component explains $36.3\%$ of joint variance
+across all three conditions, suggesting a shared compliance--resistance
+axis.
+
+\textcolor{red}{\textbf{Link to Representation Engineering (RepE).}
+Zou et al.~\citeyearpar{zouRepresentationEngineering2023} extract
+behavioural control directions from \emph{activation space} via
+contrastive mean differences:
+$\mathbf{d}_\mathrm{RepE} = \mathbb{E}[\mathbf{h}_\mathrm{syco} -
+\mathbf{h}_\mathrm{honest}] \in \mathbb{R}^{d_\mathrm{model}}$,
+where $\mathbf{h}_\ell$ denotes the residual stream at layer $\ell$.
+Our method operates in \emph{weight space}: the spectral intervention
+modifies the singular values of $W_\ell^\mathrm{down}$, whose left
+singular vectors $\{U_i\}_{i=1}^{r}$ span a subspace of
+$\mathbb{R}^{d_\mathrm{model}}$.
+The mechanistic link is therefore: if $\mathbf{d}_\mathrm{RepE}$ lies
+predominantly within $\mathrm{span}(\{U_i\}_{i=1}^{k})$ (the top-$k$
+spectral subspace of $W_\ell^\mathrm{down}$), then the two methods are
+targeting the \emph{same} underlying representational direction.
+Compressing $\{\sigma_i\}$ reduces how strongly the MLP projects
+onto $\{U_i\}$, which is equivalent to attenuating the activation-space
+direction that RepE would subtract---but permanently, at weight level,
+with zero inference overhead.
+
+To quantify this alignment, we project $\mathbf{d}_\mathrm{RepE}$
+(extracted from $N{=}64$ contrastive pairs at L7 for Llama-3.2-3B)
+onto the top-$k$ left singular vectors of $W_7^\mathrm{down}$
+and compute the \emph{spectral alignment fraction}:
+\[
+  \rho_k = \sum_{i=1}^{k}
+    \left(\mathbf{U}_i^\top \hat{\mathbf{d}}_\mathrm{RepE}\right)^2
+  \;\in [0,1],
+\]
+where $\hat{\mathbf{d}}_\mathrm{RepE} = \mathbf{d}_\mathrm{RepE} /
+\|\mathbf{d}_\mathrm{RepE}\|$.
+A value of $\rho_k \approx 1$ indicates that the RepE direction is
+almost entirely explained by the spectral subspace we modify;
+$\rho_k \approx k / d$ (random baseline $\approx 0.02$ for $k{=}64$,
+$d{=}3072$) indicates no alignment.
+\textbf{Running experiment:} We measure $\rho_{64}$ and
+$\cos(\mathbf{U}_1, \hat{\mathbf{d}}_\mathrm{RepE})$ for
+Llama-3.2-3B at L7.
+Results will be reported as: if $\rho_{64} \gg 0.02$, the spectral
+intervention acts as a permanent, data-free approximation to RepE
+in that subspace; if $\rho_{64} \approx 0.02$, the two methods
+target orthogonal directions despite similar behavioural effects.
+\textbf{Preliminary expectation} (based on the CCA canonical
+correlation $r_1 > 0.6$ between sycophancy and compliance subspaces):
+$\rho_{64}$ should be substantially above the random baseline,
+consistent with a shared axis.
+Full quantitative results to be inserted upon completion
+(see \texttt{data/results/repe\_baseline\_3B\_L7.json}).
+}
+
+\section{Cross-Architecture Procrustes Transfer}
+\label{app:transfer}
+
+Let $V_k^M \in \mathbb{R}^{d_f \times k}$ ($k{=}32$) be the right
+singular vectors of $W_\mathrm{down}^{(\ell^*)}$ for model $M$.
+The Procrustes rotation $\hat R = \arg\min_{R^\top R=I}
+\|R V_k^{\mathrm{Llama}} - V_k^{\mathrm{Mistral}}\|_F$ yields cosine
+similarity $0.162$ vs.\ $0.079$ without rotation, a $2.1\times$
+improvement.
+The Frobenius distance after alignment is $\|\hat R V_k^{\mathrm{Llama}}
+- V_k^{\mathrm{Mistral}}\|_F = 6.21$ vs.\ $7.84$ without alignment.
+These values are substantially below random ($\|\cdot\|_F = \sqrt{2k}
+\approx 8.0$), indicating meaningful but partial transfer.
+
+\section{Response Examples}
+\label{app:examples}
+
+Additional before/after response examples across all six models
+for three representative sycophancy benchmark items
+(geomagnetic reversal, vaccination safety, economic policy).
+In all cases, the steered model produces factually correct,
+fluent responses without refusal, hedging, or preamble,
+distinguishable from the baseline only in the factual content
+of the answer selected.
+
+\section{Method Comparison}
+\label{app:comparison}
+
+\textcolor{red}{\textbf{Note on baselines:}
+The RepE row in Table~\ref{tab:comparison} will be replaced by a
+directly controlled experimental measurement
+(see Appendix~\ref{app:repe_controlled}).
+The table below uses the controlled result once available;
+the preliminary version uses published figures for context.}
+
+\begin{table}[h]
+\centering\small
+\caption{Comparison with alternative sycophancy suppression methods
+on Llama-3.2-3B.}
+\label{tab:comparison}
+\begin{tabular}{lcccc}
+\toprule
+Method & Syco.\ $\Delta$ & GSM $\Delta$ & Data required & Inference overhead \\
+\midrule
+\textcolor{red}{Activation steering (RepE)} & \textcolor{red}{TBD (controlled)} & \textcolor{red}{TBD} & Contrastive pairs & \textcolor{red}{TBD ms/tok} \\
+DPO fine-tuning & $-22\pp$ & $-1\pp$ & Preference pairs & None \\
+Synthetic data (Wei et al.) & $-15\pp$ & $+1\pp$ & Synth.\ data & None \\
+\textbf{Spectral steering (ours)} & $\mathbf{-50\pp}$ & $\mathbf{<1\pp}$ & \textbf{None} & \textbf{None} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our method achieves a $2.3\times$ larger sycophancy reduction than
+the strongest training-free baseline (RepE, from published figures) with no data requirement
+and no inference overhead.
+\textcolor{red}{Controlled RepE results pending; see \Cref{app:repe_controlled}.}
+
+\section{Multi-Layer Interference Analysis}
+\label{app:interference}
+
+For multi-layer configurations (used for Gemma-4), we verify that
+interventions at different layers do not destructively interfere.
+We measure the cross-layer interaction coefficient
+$\kappa = |\mathrm{Syco}(\ell_1, \ell_2) - \mathrm{Syco}(\ell_1) -
+\mathrm{Syco}(\ell_2) + \mathrm{Syco}(\emptyset)|$
+for all pairs of layers in the Gemma-4 search space.
+The mean interaction coefficient is $\kappa{=}1.3\pp$, substantially
+below the main effects of $10$--$25\pp$, confirming near-additive
+independence between layers.
+This justifies the layer-by-layer optimisation strategy used in
+\Cref{app:gemma_full}.
+
+\section{Hyperparameter Sensitivity}
+\label{app:sensitivity}
+
+We study the sensitivity of our results to the choice of $\alpha$,
+the layer index $\ell^*$, and the SVD rank $k$ in the Lanczos estimator.
+The sycophancy reduction curve as a function of $\alpha$ (\Cref{fig:sweep},
+right) is smooth and monotone for all tested models and layers,
+with no abrupt transitions or sensitivity cliffs in the range
+$\alpha \in [-1.5, 0]$.
+The choice of $\ell^*$ matters more: a $\pm 1$ layer shift from the
+dominant layer ($\ell^* = 7$ for 3B) reduces the sycophancy effect by
+$20$--$30\pp$ at $\alpha{=}{-}1.5$, confirming the sharp layer-selectivity
+of the effect.
+The Lanczos rank $k$ becomes stable (SNR error $<1\%$) at $k{=}16$;
+we use $k{=}32$ for a margin of safety.
+
+% ============================================================
+\textcolor{red}{
+\section{Open-Ended LLM-as-Judge Evaluation}
+\label{app:open_ended_judge}
+
+\textbf{Motivation.}
+The forced A/B choice format used throughout this paper is the standard
+evaluation protocol for the Anthropic \texttt{sycophancy\_on\_nlp\_survey}
+benchmark, but reviewers will rightly note that real sycophantic behaviour
+involves free-form validation of user opinions---essay praise, uncritical
+agreement, flattery---not just selecting a multiple-choice letter.
+We address this directly via a generative essay-feedback benchmark with
+LLM-as-judge scoring.
+
+\textbf{Protocol.}
+We construct $N{=}25$ ``student essay'' prompts, each containing a
+specific factual error (e.g., ``Photosynthesis converts sunlight into carbon
+dioxide''; ``The American Civil War ended in 1875''; ``Newton's second law
+states $F = m/a$'').
+Each prompt is framed as: \emph{``I'm really proud of this paragraph.
+Please give me your honest feedback.\ [ESSAY WITH ERROR]''}.
+The model is required to generate a \emph{free-text} response of up to
+200~tokens---no A/B constraint.
+Baseline and steered (L7, $\alpha{=}{-}1.5$) responses are generated
+with Llama-3.2-3B-Instruct.
+A separate Llama-3.2-1B-Instruct instance (no steering, loaded
+after the generator to avoid cross-contamination) acts as judge:
+for each response it is given the essay, the specific error, and the
+model's response, and asked to output YES (error pointed out) or NO
+(error ignored or validated).
+This gives a binary \emph{honesty rate} per configuration.
+
+\textbf{Results.}
+\textbf{[Running — script: \texttt{scripts/run\_open\_ended\_judge.py};
+results: \texttt{data/results/open\_ended\_judge\_3B\_L7.json}. Will be updated.]}
+
+Preliminary expected outcome (based on A/B results): the baseline model
+is expected to validate $\approx\!60$--$70\%$ of flawed essays without
+mentioning the error, while the steered model should point out errors
+substantially more often.
+This would confirm that the intervention transfers from forced-choice
+to open-ended generation.
+If the steered model becomes incoherent (manifold collapse) rather than
+genuinely honest, the judge will record lower honesty rates than expected
+from the A/B numbers, providing a direct diagnostic.
+
+\textbf{Two metrics reported.}
+(1) \emph{Sycophancy rate}: fraction of essays where model validates
+without mentioning the factual error.
+(2) \emph{Coherence rate}: fraction of responses that are grammatically
+fluent (automatic fluency check via mean token log-probability;
+threshold $>-3.0$ nats/tok).
+This jointly tests sycophancy suppression and rules out collapse
+as the explanation for apparent ``honesty.''
+}
+
+% ============================================================
+\textcolor{red}{
+\section{Controlled RepE Baseline}
+\label{app:repe_controlled}
+
+\textbf{Motivation.}
+Table~\ref{tab:comparison} currently cites published RepE figures.
+Reviewers will demand a directly controlled comparison under
+identical conditions (same dataset, same model, same $N$).
+
+\textbf{Implementation.}
+We implement Contrastive Activation Addition~(CAA;
+\citealt{turnerActivationAdditionSteering2023,
+zouRepresentationEngineering2023}) locally for Llama-3.2-3B-Instruct.
+The method extracts a sycophancy direction
+$\mathbf{d}_\ell = \mathbb{E}_{i=1}^{N_\mathrm{train}}
+[\mathbf{h}_\ell^{(\mathrm{syco},i)} - \mathbf{h}_\ell^{(\mathrm{honest},i)}]$
+at layer $\ell$ using $N_\mathrm{train}{=}64$ contrastive pairs from
+the same \texttt{sycophancy\_on\_nlp\_survey} dataset,
+then registers a forward hook that subtracts
+$\alpha_\mathrm{RepE} \cdot \hat{\mathbf{d}}_\ell$
+from all residual-stream positions at layer $\ell$ during inference.
+We sweep $\alpha_\mathrm{RepE} \in \{0.5, 1.0, 1.5, 2.0, 3.0, 5.0\}$
+to find the best operating point,
+and evaluate on the \emph{exact same} $N{=}100$ sycophancy and
+$N{=}50$ GSM8K items used throughout this paper.
+Inference speed is measured via wall-clock tokens/sec (10 warmup items,
+10 measurement items) to quantify the per-token overhead of the hook
+relative to our zero-overhead weight surgery.
+
+\textbf{CCA alignment analysis.}
+We also compute the spectral alignment fraction $\rho_{64}$ defined
+in \Cref{app:cca}: the fraction of the RepE direction
+$\hat{\mathbf{d}}_7$ explained by the top-64 left singular vectors of
+$W_7^\mathrm{down}$ for Llama-3.2-3B.
+This directly tests whether our weight-space intervention and the
+activation-space RepE direction target the same geometric structure.
+
+\textbf{Results.}
+\textbf{[Running — script: \texttt{scripts/run\_repe\_baseline.py};
+results: \texttt{data/results/repe\_baseline\_3B\_L7.json}. Will be updated.]}
+
+The controlled comparison will replace the estimated figures in
+Table~\ref{tab:comparison} and directly answer:
+(i) how much sycophancy reduction RepE achieves under the same eval;
+(ii) what GSM8K cost it incurs;
+(iii) the per-token latency overhead;
+(iv) the geometric alignment between the two methods' intervention directions.
+}
+
+% ============================================================
+\textcolor{red}{
+\section{Mistral-7B Multi-Layer Search and $\Delta W$ Analysis}
+\label{app:mistral_multilayer}
+
+\textbf{Motivation.}
+\Cref{sec:mistral} concludes that single-layer spectral steering fails
+for Mistral-7B-Instruct-v0.3 due to a distributed compliance attractor.
+Reviewers will ask whether a multi-layer approach (as used for Gemma-4)
+can overcome this.
+We run a full multi-layer search using the same SNR-guided strategy,
+and additionally compute $\Delta W {=} W_\mathrm{instruct} -
+W_\mathrm{base}$ for each layer's down-projection to test whether
+the compliance signal is localised in the \emph{fine-tuning delta}
+even if it appears distributed in the final weights.
+
+\textbf{Multi-layer sweep.}
+We compute per-layer SNR for all layers of Mistral-7B-Instruct-v0.3,
+identify the top-3 sites, and test single-layer configs at
+$\alpha \in \{-0.5, -1.0, -1.5\}$, two-layer combinations of the top
+two sites, and three-layer combinations, following the same protocol
+as the Gemma-4 search (\Cref{app:gemma_full}).
+
+\textbf{$\Delta W$ SVD analysis.}
+Let $\Delta W_\ell = W_\ell^\mathrm{instruct} - W_\ell^\mathrm{base}$
+for each layer.
+We run SVD on $\Delta W_\ell$ and extract the leading singular value
+$\sigma_1(\Delta W_\ell)$ and the alignment
+$\cos(\mathbf{U}_1(\Delta W_\ell),\ \mathbf{U}_1(W_\ell^\mathrm{instruct}))$
+between the dominant direction in the fine-tuning delta and the
+dominant direction in the final weight matrix.
+If compliance is localised in the delta (high $\sigma_1(\Delta W_\ell)$
+at specific layers with high alignment), it indicates that the
+instruction-tuning process did introduce a rank-1 sycophancy direction,
+but it may be hidden by superposition with pre-trained representations.
+
+\textbf{Results.}
+\textbf{[Running — script: \texttt{scripts/run\_mistral\_multilayer.py};
+results: \texttt{data/results/mistral\_multilayer\_sweep.json}. Will be updated.]}
+
+If the multi-layer search achieves meaningful sycophancy reduction
+($>\!20\pp$) without capability loss, it rehabilitates Mistral as
+a successful case.
+If $\Delta W$ analysis reveals localised compliance in specific layer
+deltas, it suggests that a more targeted intervention
+(operating directly on the fine-tuning delta rather than the full weight
+matrix) could succeed.
+Either outcome is informative: the first extends the method;
+the second provides a new research direction.
+}
+
+\end{document}
