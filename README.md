@@ -2,7 +2,7 @@
 
 **Spectral Diagnosis and Training-Free Weight Surgery in LLMs**
 
-*NeurIPS 2026 submission*
+*Accepted at ICML 2026 MechInterp workshop*
 
 ---
 
